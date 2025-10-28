@@ -133,8 +133,8 @@ export default function CreateBillPage() {
       <div className="bg-transparent">
         {/* Invoice Details */}
         <div className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
+          <div className="grid sm:grid-cols-2 grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
               <Select onValueChange={setCustomer}>
                 <SelectTrigger className="w-full">

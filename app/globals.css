@@ -6,13 +6,13 @@
 /* 🌈 ZestPOS Brand Theme Setup */
 :root {
   /* Base colors */ /* gray-50 */ /* gray-800 */
-  --card: oklch(1 0 0);
-  --muted: oklch(0.97 0 0);
+  --card: #ffffff;
+  --muted: #f2f3f9;
   --border: oklch(0.922 0 0);
 
   /* Brand colors */
   --color-primary: #800080; /* ZestPOS purple */
-  --color-accent: #6366f1; /* Indigo accent */
+  --color-accent: #f2f4f9; /* Indigo accent */
   --color-success: #16a34a;
   --color-danger: #dc2626;
   --color-warning: #f59e0b;
@@ -96,15 +96,6 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* 🌙 Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --card: #111111;
-    --muted: #1a1a1a;
-    --border: #2d2d2d;
-  }
-}
-
 /* ✨ Global Element Styles */
 body {
   font-family: var(--font-sans);
@@ -157,7 +148,7 @@ body {
 input, select, textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-muted);
+  background: "#fff";
   padding: 0.5rem 0.75rem;
   outline: none;
 }
@@ -179,7 +170,7 @@ th, td {
 }
 
 th {
-  background: var(--muted);
+  background: #f2f4f9;
   text-align: left;
   font-weight: 600;
   color: var(--foreground);
