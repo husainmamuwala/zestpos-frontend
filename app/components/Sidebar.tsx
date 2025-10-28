@@ -15,7 +15,9 @@ export default function Sidebar() {
   return (
     <aside className="w-64 h-screen bg-white shadow-md flex flex-col">
       <div className="p-6">
-        <img src="/tali-logo.svg" alt="ZestPOS" className="h-12 mx-auto mb-6" />
+        {/* <img src="/zestposlogo.png" alt="ZestPOS" className="h-12 mx-auto mb-6" /> */}
+       
+        <h1 className="text-2xl font-bold text-purple-600 text-center">ZestPOS</h1>
       </div>
       <nav className="flex-1 space-y-2 px-4">
         {navItems.map(({ name, href, icon: Icon }) => (
