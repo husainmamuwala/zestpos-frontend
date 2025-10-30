@@ -149,7 +149,7 @@ export default function ForgotPasswordPage() {
         </form>
 
         <div className="mt-6 text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} t.alimahomed (ZestPOS)
+          © {new Date().getFullYear()} Tamco Tech (ZestPOS)
         </div>
       </div>
     </main>
