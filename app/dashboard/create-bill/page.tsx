@@ -38,6 +38,7 @@ export default function CreateBillPage() {
   const [invoiceDate, setInvoiceDate] = useState("");
   const [supplyDate, setSupplyDate] = useState("");
 
+  // Start with one empty row by default
   const [items, setItems] = useState<
     {
       id: number;
@@ -48,13 +49,24 @@ export default function CreateBillPage() {
       qty: number;
       vat: number; // percentage
     }[]
-  >([]);
+  >([
+    {
+      // eslint-disable-next-line react-hooks/purity
+      id: Date.now(),
+      name: "",
+      original: 0,
+      lastSold: undefined,
+      price: 0,
+      qty: 1,
+      vat: 5,
+    },
+  ]);
 
   const handleAddItem = () => {
     setItems((prev) => [
       ...prev,
       {
-        id: Date.now(),
+        id: Date.now() + Math.floor(Math.random() * 1000),
         name: "",
         original: 0,
         lastSold: undefined,
@@ -105,7 +117,11 @@ export default function CreateBillPage() {
   };
 
   const handleRemove = (id: number) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+    // prevent removing the last remaining row
+    setItems((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((i) => i.id !== id);
+    });
   };
 
   // Per-item final calculation: qty * price * (1 + vat/100)
@@ -121,6 +137,28 @@ export default function CreateBillPage() {
   };
 
   const total = items.reduce((sum, i) => sum + itemFinal(i), 0);
+
+  const disableDelete = items.length === 1; // true when only one row exists
+
+  // New: Disable Save when NO item selected (i.e., every row has empty name)
+  const hasSelectedItem = items.some((i) => String(i.name || "").trim() !== "");
+  const saveDisabled = !hasSelectedItem;
+
+  const handleSaveInvoice = () => {
+    if (saveDisabled) return; // guard
+    // TODO: implement saving (localStorage or backend). For now, simple console log
+    const invoice = {
+      customer,
+      invoiceNo,
+      invoiceDate,
+      supplyDate,
+      items,
+      total,
+    };
+    console.log("Save invoice:", invoice);
+    // you can add localStorage or API call here
+    alert("Invoice saved (mock). Check console for payload.");
+  };
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -288,8 +326,17 @@ export default function CreateBillPage() {
 
                     {/* Remove */}
                     <td className="px-3 py-2 align-top">
-                      <Button variant="ghost" size="icon" onClick={() => handleRemove(item.id)}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={disableDelete}
+                        onClick={() => handleRemove(item.id)}
+                        aria-disabled={disableDelete}
+                        title={disableDelete ? "At least one item is required" : "Remove item"}
+                      >
+                        <Trash2
+                          className={`h-4 w-4 ${disableDelete ? "text-gray-300" : "text-red-500"}`}
+                        />
                       </Button>
                     </td>
                   </motion.tr>
@@ -319,7 +366,17 @@ export default function CreateBillPage() {
         <Button variant="outline" className="px-6 py-2">
           Cancel
         </Button>
-        <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2">
+        <Button
+          className={`px-6 py-2 ${
+            saveDisabled
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : "bg-purple-600 hover:bg-purple-700 text-white"
+          }`}
+          onClick={handleSaveInvoice}
+          disabled={saveDisabled}
+          aria-disabled={saveDisabled}
+          title={saveDisabled ? "Select at least one item to enable Save" : "Save invoice"}
+        >
           Save Invoice
         </Button>
       </div>
