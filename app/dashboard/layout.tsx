@@ -6,14 +6,14 @@ import ClientAuthGuard from "../components/ClientAuthGuard";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     
-      <div className="antialiased bg-[var(--background)]">
+      <div className="antialiased">
         <div className="flex min-h-screen">
           <Sidebar />
           <div className="w-full">
             {/* ClientAuthGuard blocks access client-side if no token */}
-            {/* <ClientAuthGuard> */}
+            <ClientAuthGuard>
               {children}
-            {/* </ClientAuthGuard> */}
+            </ClientAuthGuard>
           </div>
         </div>
       </div>

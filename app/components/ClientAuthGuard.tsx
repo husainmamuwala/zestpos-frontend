@@ -9,7 +9,6 @@ export default function ClientAuthGuard({ children }: { children: React.ReactNod
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // only run client-side
     try {
       const token = localStorage.getItem("zestpos_token");
       if (!token) {
@@ -27,6 +26,6 @@ export default function ClientAuthGuard({ children }: { children: React.ReactNod
   }, [router, pathname]);
 
   // Wait until we've checked localStorage to avoid flicker
-  if (!checked) return <>{children}</>;
+  if (!checked) return;
   return <>{children}</>;
 }

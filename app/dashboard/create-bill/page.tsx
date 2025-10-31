@@ -161,7 +161,7 @@ export default function CreateBillPage() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-8 mx-auto">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-semibold text-gray-900 mb-1">Create Invoice</h1>

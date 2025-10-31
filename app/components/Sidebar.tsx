@@ -6,9 +6,9 @@ import { FilePlus2, PackagePlus, FileText, LogOut } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
-  { name: "Create Bill", href: "/dashboard/create-bill", icon: FilePlus2 },
+  { name: "Create Invoice", href: "/dashboard/create-bill", icon: FilePlus2 },
   { name: "Add Items", href: "/dashboard/add-items", icon: PackagePlus },
-  { name: "All Bills", href: "/dashboard", icon: FileText },
+  { name: "All Invoices", href: "/dashboard", icon: FileText },
 ];
 
 function normalize(p?: string | null) {
