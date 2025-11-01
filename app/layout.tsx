@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+// @ts-ignore
 import "./globals.css";
 // Sidebar is intentionally not included here so pages like /login do not show it.
 
@@ -27,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="flex min-h-screen bg-[var(--background)]">
+        <div className="flex min-h-screen">
           <div className="antialiased w-full">{children}</div>
         </div>
       </body>
