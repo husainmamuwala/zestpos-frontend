@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,20 +13,70 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-/* Mock Data */
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+
+/** ---------- Types ---------- **/
+type ProductFromApi = {
+  _id?: string;
+  id?: string | number;
+  name: string;
+  originalPrice?: number;
+  price?: number;
+};
+
+type ProductsApiResponse = ProductFromApi[] | { products: ProductFromApi[] };
+
+/** ---------- Type Guards & Helpers ---------- **/
+function isProductsArray(x: unknown): x is ProductFromApi[] {
+  return Array.isArray(x) && x.every((it) => typeof (it as ProductFromApi).name === "string");
+}
+
+function isProductsWrapper(x: unknown): x is { products: unknown } {
+  return typeof x === "object" && x !== null && "products" in (x as object);
+}
+
+/** Safely normalize unknown product shapes into ProductFromApi */
+function normalizeApiProduct(p: unknown): ProductFromApi {
+  const obj = (p as Record<string, unknown>) ?? {};
+
+  const _id =
+    typeof obj._id === "string"
+      ? obj._id
+      : typeof obj.id === "string"
+      ? obj.id
+      : typeof obj.id === "number"
+      ? String(obj.id)
+      : undefined;
+
+  const name =
+    typeof obj.name === "string"
+      ? obj.name
+      : typeof obj.product_name === "string"
+      ? obj.product_name
+      : "";
+
+  const originalPrice =
+    typeof obj.originalPrice === "number"
+      ? obj.originalPrice
+      : typeof obj.original_price === "number"
+      ? obj.original_price
+      : typeof obj.price === "number"
+      ? obj.price
+      : undefined;
+
+  const price = typeof obj.price === "number" ? obj.price : undefined;
+
+  return { _id, id: _id ?? (typeof obj.id === 'string' || typeof obj.id === 'number' ? obj.id : undefined), name, originalPrice, price };
+}
+
+/* Customers are still local as before */
 const mockCustomers = [
   { id: 1, name: "ABC Traders" },
   { id: 2, name: "Star Beverages" },
   { id: 3, name: "Cool Drinks Mart" },
 ];
 
-const mockItems = [
-  { id: 1, name: "Mango Syrup", originalPrice: 6 },
-  { id: 2, name: "Cola Base", originalPrice: 8 },
-  { id: 3, name: "Orange Flavour", originalPrice: 5 },
-];
-
-// last sold mock (still used in helper line)
+/* last sold mock (still used in helper line) */
 const lastSoldPrices: Record<string, Record<string, number>> = {
   "ABC Traders": { "Mango Syrup": 10, "Cola Base": 9 },
   "Star Beverages": { "Orange Flavour": 7 },
@@ -37,6 +87,11 @@ export default function CreateBillPage() {
   const [invoiceNo, setInvoiceNo] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("");
   const [supplyDate, setSupplyDate] = useState("");
+
+  // products list fetched from API (used in dropdown)
+  const [productsList, setProductsList] = useState<ProductFromApi[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsError, setProductsError] = useState<string | null>(null);
 
   // Start with one empty row by default
   const [items, setItems] = useState<
@@ -62,6 +117,79 @@ export default function CreateBillPage() {
     },
   ]);
 
+  // fetch products from API on mount
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchProducts = async () => {
+      setProductsLoading(true);
+      setProductsError(null);
+      try {
+        const res = await fetch(`${API_BASE_URL}/product/products`);
+        if (!res.ok) {
+          // try to get body text or json safely
+          let bodyText = `Failed to fetch products: ${res.status}`;
+          try {
+            const maybeJson = (await res.json()) as unknown;
+            if (isProductsArray(maybeJson)) {
+              // unlikely because res.ok was false, but handle gracefully
+              if (!mounted) return;
+              setProductsList(maybeJson.map(normalizeApiProduct));
+              return;
+            }
+            // if json with message:
+            if (typeof maybeJson === "object" && maybeJson !== null && "message" in maybeJson) {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+              bodyText = String((maybeJson as Record<string, unknown>).message ?? bodyText);
+            }
+          } catch {
+            try {
+              const txt = await res.text();
+              if (txt) bodyText = txt;
+            } catch {
+              /* ignore */
+            }
+          }
+          throw new Error(bodyText);
+        }
+
+        const payload = (await res.json()) as unknown;
+
+        let arr: ProductFromApi[] = [];
+
+        if (isProductsArray(payload)) {
+          arr = payload.map(normalizeApiProduct);
+        } else if (isProductsWrapper(payload)) {
+          const maybe = (payload as { products: unknown }).products;
+          if (isProductsArray(maybe)) {
+            arr = maybe.map(normalizeApiProduct);
+          } else {
+            throw new Error("Invalid products response shape (wrapper.products not array)");
+          }
+        } else {
+          throw new Error("Invalid products response shape");
+        }
+
+        if (!mounted) return;
+        setProductsList(arr);
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.warn("Failed to fetch products list:", errMsg);
+        if (mounted) {
+          setProductsError(errMsg);
+          setProductsList([]); // keep empty until API returns successfully
+        }
+      } finally {
+        if (mounted) setProductsLoading(false);
+      }
+    };
+
+    fetchProducts();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const handleAddItem = () => {
     setItems((prev) => [
       ...prev,
@@ -78,19 +206,21 @@ export default function CreateBillPage() {
   };
 
   const handleItemChange = (id: number, name: string) => {
-    const found = mockItems.find((i) => i.name === name);
+    // find product by name from fetched list
+    const foundApi = productsList.find((i) => i.name === name);
+
     setItems((prev) =>
       prev.map((item) =>
         item.id === id
           ? {
               ...item,
               name,
-              original: found?.originalPrice || 0,
+              original: foundApi?.originalPrice ?? 0,
               lastSold: customer ? lastSoldPrices[customer]?.[name] : undefined,
               // default price: last sold for that customer if available, otherwise original
               price: customer
-                ? lastSoldPrices[customer]?.[name] ?? found?.originalPrice ?? 0
-                : found?.originalPrice ?? 0,
+                ? lastSoldPrices[customer]?.[name] ?? foundApi?.originalPrice ?? 0
+                : foundApi?.originalPrice ?? 0,
             }
           : item
       )
@@ -125,11 +255,7 @@ export default function CreateBillPage() {
   };
 
   // Per-item final calculation: qty * price * (1 + vat/100)
-  const itemFinal = (item: {
-    qty: number;
-    price: number;
-    vat: number;
-  }): number => {
+  const itemFinal = (item: { qty: number; price: number; vat: number }): number => {
     const qty = Number(item.qty) || 0;
     const price = Number(item.price) || 0;
     const vat = Number(item.vat) || 0;
@@ -146,7 +272,6 @@ export default function CreateBillPage() {
 
   const handleSaveInvoice = () => {
     if (saveDisabled) return; // guard
-    // TODO: implement saving (localStorage or backend). For now, simple console log
     const invoice = {
       customer,
       invoiceNo,
@@ -156,9 +281,70 @@ export default function CreateBillPage() {
       total,
     };
     console.log("Save invoice:", invoice);
-    // you can add localStorage or API call here
     alert("Invoice saved (mock). Check console for payload.");
   };
+
+  /**
+   * ItemSelect subcomponent
+   * - uses your Select components
+   * - shows a loader message while products are loading
+   * - shows an inline search box to filter the products list
+   */
+  function ItemSelect({
+    value,
+    onValueChange,
+    products,
+    loading,
+  }: {
+    value: string;
+    onValueChange: (v: string) => void;
+    products: ProductFromApi[];
+    loading: boolean;
+  }) {
+    const [query, setQuery] = useState("");
+    const lower = query.trim().toLowerCase();
+
+    const filtered =
+      lower === "" ? products : products.filter((p) => String(p.name).toLowerCase().includes(lower));
+
+    return (
+      <Select value={value} onValueChange={onValueChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={loading ? "Loading items..." : "Select item"} />
+        </SelectTrigger>
+
+        <SelectContent>
+          {/* Search input inside dropdown — doesn't alter outer UI */}
+          <div className="px-3 py-2">
+            <Input
+              placeholder={loading ? "Loading..." : "Search items..."}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full"
+              disabled={loading}
+            />
+          </div>
+
+          {/* loading / empty / list */}
+          {loading ? (
+            <div className="px-3 py-2 text-sm text-gray-500">Loading products…</div>
+          ) : products.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-gray-500">
+              {productsError ? `Failed to load products` : "No products available"}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-gray-500">No items match {query}</div>
+          ) : (
+            filtered.map((p) => (
+              <SelectItem key={String(p._id ?? p.id ?? p.name)} value={p.name}>
+                {p.name}
+              </SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
+    );
+  }
 
   return (
     <div className="p-8 mx-auto">
@@ -189,9 +375,7 @@ export default function CreateBillPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Invoice Number
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
               <Input
                 type="text"
                 placeholder="INV-001"
@@ -202,20 +386,12 @@ export default function CreateBillPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
-              <Input
-                type="date"
-                value={invoiceDate}
-                onChange={(e) => setInvoiceDate(e.target.value)}
-              />
+              <Input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Supply Date</label>
-              <Input
-                type="date"
-                value={supplyDate}
-                onChange={(e) => setSupplyDate(e.target.value)}
-              />
+              <Input type="date" value={supplyDate} onChange={(e) => setSupplyDate(e.target.value)} />
             </div>
           </div>
 
@@ -235,7 +411,7 @@ export default function CreateBillPage() {
             <thead className="bg-gray-50 text-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left w-[45%]">Item</th>
-                <th className="px-3 py-2 text-left">Price</th>
+                <th className="px-3 py-2 text-left">Price (OMR)</th>
                 <th className="px-3 py-2 text-left">Qty</th>
                 <th className="px-3 py-2 text-left">VAT %</th>
                 <th className="px-3 py-2 text-left">Final Amount</th>
@@ -256,21 +432,13 @@ export default function CreateBillPage() {
                     {/* Item (select full width in first column) */}
                     <td className="px-3 py-2 align-top">
                       <div className="w-full">
-                        <Select
+                        {/* Use ItemSelect to provide search inside dropdown */}
+                        <ItemSelect
                           value={item.name}
                           onValueChange={(value) => handleItemChange(item.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select item" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mockItems.map((i) => (
-                              <SelectItem key={i.id} value={i.name}>
-                                {i.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          products={productsList}
+                          loading={productsLoading}
+                        />
 
                         {/* helper line with original + last-sold below the select */}
                         <div className="mt-1 text-xs text-gray-500 flex gap-3">
@@ -291,8 +459,9 @@ export default function CreateBillPage() {
                     <td className="px-3 py-2 align-top">
                       <Input
                         type="number"
-                        value={String(item.price ?? "")}
-                        onChange={(e) => handleChange(item.id, "price", e.target.value)}
+                        step="0.001" // Allow 3 decimal places
+                        value={item.price} // Format the value to 3 decimal places
+                        onChange={(e) => handleChange(item.id, "price", parseFloat(e.target.value).toFixed(3))}
                         className="w-28"
                       />
                     </td>
@@ -320,9 +489,7 @@ export default function CreateBillPage() {
                     </td>
 
                     {/* Final Amount */}
-                    <td className="px-3 py-2 align-top font-medium">
-                      ₹{itemFinal(item).toFixed(2)}
-                    </td>
+                    <td className="px-3 py-2 align-top font-medium">₹{itemFinal(item).toFixed(2)}</td>
 
                     {/* Remove */}
                     <td className="px-3 py-2 align-top">
@@ -334,9 +501,7 @@ export default function CreateBillPage() {
                         aria-disabled={disableDelete}
                         title={disableDelete ? "At least one item is required" : "Remove item"}
                       >
-                        <Trash2
-                          className={`h-4 w-4 ${disableDelete ? "text-gray-300" : "text-red-500"}`}
-                        />
+                        <Trash2 className={`h-4 w-4 ${disableDelete ? "text-gray-300" : "text-red-500"}`} />
                       </Button>
                     </td>
                   </motion.tr>
@@ -348,10 +513,7 @@ export default function CreateBillPage() {
 
         {/* Actions row */}
         <div className="flex items-center justify-between mt-6">
-          <Button
-            onClick={handleAddItem}
-            className="bg-purple-600 text-white hover:bg-purple-700 px-4 py-2 text-sm"
-          >
+          <Button onClick={handleAddItem} className="bg-purple-600 text-white hover:bg-purple-700 px-4 py-2 text-sm">
             <Plus className="h-4 w-4 mr-2" /> Add Item
           </Button>
 
@@ -367,11 +529,7 @@ export default function CreateBillPage() {
           Cancel
         </Button>
         <Button
-          className={`px-6 py-2 ${
-            saveDisabled
-              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-              : "bg-purple-600 hover:bg-purple-700 text-white"
-          }`}
+          className={`px-6 py-2 ${saveDisabled ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 text-white"}`}
           onClick={handleSaveInvoice}
           disabled={saveDisabled}
           aria-disabled={saveDisabled}
