@@ -429,12 +429,7 @@ export default function CreateBillPage() {
     alert("Invoice saved (mock). Check console for payload.");
   };
 
-  /**
-   * ItemSelect subcomponent
-   * - uses your Select components
-   * - shows a loader message while products are loading
-   * - shows an inline search box to filter the products list
-   */
+
   function ItemSelect({
     value,
     onValueChange,

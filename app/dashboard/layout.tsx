@@ -8,12 +8,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen">
         <Sidebar />
         <div className="w-full">
-          <ClientAuthGuard>
-            {children}
-          </ClientAuthGuard>
+          <ClientAuthGuard>{children}</ClientAuthGuard>
         </div>
       </div>
     </div>
   );
 }
-
