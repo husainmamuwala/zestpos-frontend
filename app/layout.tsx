@@ -2,8 +2,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "./components/Sidebar";
-import ClientAuthGuard from "./components/ClientAuthGuard";
+// Sidebar is intentionally not included here so pages like /login do not show it.
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,18 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="flex min-h-screen bg-[var(--background)]">
-          <div className="antialiased">
-
-            <div className="flex min-h-screen">
-              <ClientAuthGuard>
-                <Sidebar />
-              </ClientAuthGuard>
-              <div className="w-full">
-                {children}
-              </div>
-            </div>
-
-          </div>
+          <div className="antialiased w-full">{children}</div>
         </div>
       </body>
     </html>
