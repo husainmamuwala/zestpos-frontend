@@ -9,7 +9,7 @@ const navItems = [
   { name: "Create Invoice", href: "/create-bill", icon: FilePlus2 },
   { name: "Add Items", href: "/add-items", icon: PackagePlus },
   { name: "All Invoices", href: "/", icon: FileText },
-  {name:"Customers", href:"/customer", icon:Users2}
+  { name: "Customers", href: "/customer", icon: Users2 }
 ];
 
 function normalize(p?: string | null) {
@@ -26,30 +26,13 @@ export default function Sidebar() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
+    setLoggingOut(true);
     const ok = confirm("Are you sure you want to log out?");
     if (!ok) return;
-
-    setLoggingOut(true);
-    try {
-      // Try server logout (clears HttpOnly cookie if implemented)
-      await fetch("/api/auth/logout", { method: "POST" }).catch(() => {
-        /* ignore errors */
-      });
-
-      // Clear client-side auth
-      try {
-        localStorage.removeItem("zestpos_token");
-        localStorage.removeItem("zestpos_user");
-        localStorage.removeItem("zestpos_remembered_email");
-      } catch (e) {
-        // ignore localStorage errors
-      }
-
-      // navigate to login
-      router.push("/login");
-    } finally {
-      setLoggingOut(false);
-    }
+    localStorage.removeItem("zestpos_token");
+    localStorage.removeItem("zestpos_user");
+    router.push("/login");
+    setLoggingOut(false);
   };
 
   return (
@@ -71,9 +54,8 @@ export default function Sidebar() {
             <Link
               key={name}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${
-                isActive ? "bg-purple-600 text-white" : "text-gray-700 hover:bg-gray-100"
-              }`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? "bg-purple-600 text-white" : "text-gray-700 hover:bg-gray-100"
+                }`}
             >
               <Icon className="h-5 w-5" />
               {name}
@@ -88,11 +70,10 @@ export default function Sidebar() {
           type="button"
           onClick={handleLogout}
           disabled={loggingOut}
-          className={`w-full cursor-pointer flex items-center gap-3 px-3 py-2 text-sm rounded-md transition ${
-            loggingOut
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
+          className={`w-full cursor-pointer flex items-center gap-3 px-3 py-2 text-sm rounded-md transition ${loggingOut
+            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+            : "text-gray-700 hover:bg-gray-100"
+            }`}
           aria-disabled={loggingOut}
           title="Logout"
         >
