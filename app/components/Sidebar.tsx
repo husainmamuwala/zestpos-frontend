@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FilePlus2, PackagePlus, FileText, LogOut } from "lucide-react";
+import { FilePlus2, PackagePlus, FileText, LogOut, Users2 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
-  { name: "Create Invoice", href: "/create-bill", icon: FilePlus2 },
-  { name: "Add Items", href: "/add-items", icon: PackagePlus },
-  { name: "All Invoices", href: "/", icon: FileText },
+  { name: "Create Invoice", href: "/dashboard/create-bill", icon: FilePlus2 },
+  { name: "Add Items", href: "/dashboard/add-items", icon: PackagePlus },
+  { name: "All Invoices", href: "/dashboard", icon: FileText },
+  {name:"Customers", href:"/dashboard/customer", icon:Users2}
 ];
 
 function normalize(p?: string | null) {
