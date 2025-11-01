@@ -13,7 +13,7 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 /** ---------- Types ---------- **/
 type ProductFromApi = {
@@ -23,8 +23,6 @@ type ProductFromApi = {
   originalPrice?: number;
   price?: number;
 };
-
-type ProductsApiResponse = ProductFromApi[] | { products: ProductFromApi[] };
 
 /** ---------- Type Guards & Helpers ---------- **/
 function isProductsArray(x: unknown): x is ProductFromApi[] {
@@ -102,7 +100,7 @@ export default function CreateBillPage() {
       lastSold?: number;
       price: number;
       qty: number;
-      vat: number; // percentage
+      vat: number; 
     }[]
   >([
     {
@@ -266,7 +264,6 @@ export default function CreateBillPage() {
 
   const disableDelete = items.length === 1; // true when only one row exists
 
-  // New: Disable Save when NO item selected (i.e., every row has empty name)
   const hasSelectedItem = items.some((i) => String(i.name || "").trim() !== "");
   const saveDisabled = !hasSelectedItem;
 

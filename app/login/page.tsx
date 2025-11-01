@@ -5,26 +5,10 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
-
-/**
- * Mock auth function (replace with your API call)
- * resolves with a fake token if email/password are non-empty and password length >= 4
- */
-async function mockAuth(email: string, password: string) {
-  // simulate a short network call
-  await new Promise((res) => setTimeout(res, 400));
-  if (!email || !password) throw new Error("Invalid credentials");
-  if (password.length < 4) throw new Error("Password must be at least 4 characters");
-  // return fake token & user
-  return {
-    token: "zestpos_mock_token_123456",
-    user: { email, name: "ZestPOS User" },
-  };
-}
+import { publicApi } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [remember, setRemember] = useState<boolean>(false);
@@ -33,17 +17,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // load remembered email if present
   useEffect(() => {
     try {
       const remembered = localStorage.getItem("zestpos_remembered_email");
       if (remembered) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setEmail(remembered);
         setRemember(true);
       }
     } catch (e) {
-      // ignore localStorage errors
+
     }
   }, []);
 
@@ -52,15 +34,17 @@ export default function LoginPage() {
       setError("Please enter your email.");
       return false;
     }
-    // simple email basic check
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Please enter a valid email address.");
       return false;
     }
+
     if (!password) {
       setError("Please enter your password.");
       return false;
     }
+
     setError(null);
     return true;
   };
@@ -73,8 +57,10 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const result = await mockAuth(email.trim(), password);
-      // persist token (mock) and user
+      const result = await publicApi.post("/auth/login", {
+        email: email.trim(),
+        password,
+      }).then(res => res.data);
       try {
         localStorage.setItem("zestpos_token", result.token);
         localStorage.setItem("zestpos_user", JSON.stringify(result.user));
@@ -84,12 +70,9 @@ export default function LoginPage() {
           localStorage.removeItem("zestpos_remembered_email");
         }
       } catch (err) {
-        // ignore localStorage write errors but still proceed
         console.warn("localStorage write failed", err);
       }
-
-      // redirect to dashboard
-      router.push("/dashboard");
+      router.push("/");
     } catch (err: unknown) {
       setError((err as Error)?.message ?? "Login failed. Try again.");
       setLoading(false);
@@ -189,9 +172,8 @@ export default function LoginPage() {
           <div className="flex flex-col gap-3">
             <Button
               type="submit"
-              className={`w-full flex justify-center items-center py-2 ${
-                loading ? "opacity-80 cursor-wait" : "hover:bg-purple-700"
-              } bg-purple-600 text-white`}
+              className={`w-full flex justify-center items-center py-2 ${loading ? "opacity-80 cursor-wait" : "hover:bg-purple-700"
+                } bg-purple-600 text-white`}
               disabled={loading}
               aria-disabled={loading}
             >
