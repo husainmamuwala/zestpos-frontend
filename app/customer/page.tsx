@@ -3,15 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
+import AddCustomerDialog from "./AddCustomerDialog";
 
 type Customer = {
   _id?: string;
@@ -132,22 +125,10 @@ export default function CustomersPage() {
     };
   }
 
-  const openAddDialog = () => {
-    setFormError(null);
-    setName("");
-    setAddress("");
-    setPhone("");
-    setContactPersonName("");
-    setEmail("");
-    setDeliveryaddress("");
-    setDialogOpen(true);
-  };
-
   const closeAddDialog = () => {
     setDialogOpen(false);
   };
 
-  // validation to reflect required fields in your schema
   const validateForm = (): boolean => {
     if (!name.trim()) {
       setFormError("Name is required.");
@@ -268,62 +249,26 @@ export default function CustomersPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-                <Plus className="h-4 w-4 mr-2" /> Add Customer
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Add Customer</DialogTitle>
-              </DialogHeader>
-
-              <form onSubmit={handleAddCustomer} className="grid grid-cols-1 gap-4 mt-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Customer name" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
-                  <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Customer address" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +91 98765 43210" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person Name</label>
-                  <Input value={contactPersonName} onChange={(e) => setContactPersonName(e.target.value)} placeholder="Optional" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Optional" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
-                  <Input value={deliveryaddress} onChange={(e) => setDeliveryaddress(e.target.value)} placeholder="Optional" />
-                </div>
-
-                {formError && <div className="text-sm text-red-600">{formError}</div>}
-
-                <DialogFooter className="flex justify-end gap-2">
-                  <Button variant="outline" type="button" onClick={closeAddDialog} disabled={saving}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white" disabled={saving}>
-                    {saving ? "Saving..." : "Save Customer"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <AddCustomerDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            name={name}
+            setName={setName}
+            address={address}
+            setAddress={setAddress}
+            phone={phone}
+            setPhone={setPhone}
+            contactPersonName={contactPersonName}
+            setContactPersonName={setContactPersonName}
+            email={email}
+            setEmail={setEmail}
+            deliveryaddress={deliveryaddress}
+            setDeliveryaddress={setDeliveryaddress}
+            formError={formError}
+            saving={saving}
+            onSubmit={handleAddCustomer}
+            onCancel={closeAddDialog}
+          />
         </div>
       </div>
 

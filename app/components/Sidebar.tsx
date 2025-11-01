@@ -88,7 +88,7 @@ export default function Sidebar() {
           type="button"
           onClick={handleLogout}
           disabled={loggingOut}
-          className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md transition ${
+          className={`w-full cursor-pointer flex items-center gap-3 px-3 py-2 text-sm rounded-md transition ${
             loggingOut
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
               : "text-gray-700 hover:bg-gray-100"
