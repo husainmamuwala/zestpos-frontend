@@ -10,7 +10,6 @@ import { authApi } from "@/lib/api";
 export default function Home() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -36,20 +35,14 @@ export default function Home() {
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold">All Bills</h1>
                 <Link href="/create-bill">
-                  <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                  <Button className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white">
                     Create Invoice
                   </Button>
                 </Link>
               </div>
 
               {/* Loading / Error states */}
-              {loading ? (
-                <p>Loading invoices...</p>
-              ) : error ? (
-                <p className="text-red-500">Error: {error}</p>
-              ) : (
-                <BillsTable invoices={invoices} />
-              )}
+              <BillsTable invoices={invoices} />
             </div>
           </ClientAuthGuard>
         </div>
