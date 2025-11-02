@@ -31,11 +31,6 @@ type Customer = {
   address?: string;
 };
 
-const lastSoldPrices: Record<string, Record<string, number>> = {
-  "ABC Traders": { "Mango Syrup": 10, "Cola Base": 9 },
-  "Star Beverages": { "Orange Flavour": 7 },
-};
-
 export default function CreateBillPage() {
   const [customer, setCustomer] = useState<string | null>(null);
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -49,7 +44,7 @@ export default function CreateBillPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<string>(""); // stores _id of selected customer
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
 
   const [items, setItems] = useState<
     {
@@ -63,7 +58,6 @@ export default function CreateBillPage() {
     }[]
   >([
     {
-      // eslint-disable-next-line react-hooks/purity
       id: Date.now(),
       name: "",
       original: 0,
@@ -103,7 +97,6 @@ export default function CreateBillPage() {
         console.warn("Error fetching customers:", err);
       }
     };
-
     fetchCustomers();
   }, []);
 
@@ -146,11 +139,8 @@ export default function CreateBillPage() {
             ...item,
             name,
             original: foundApi?.originalPrice ?? 0,
-            lastSold: customer ? lastSoldPrices[customer]?.[name] : undefined,
-            price:
-              customer
-                ? lastSoldPrices[customer]?.[name] ?? foundApi?.originalPrice ?? 0
-                : foundApi?.originalPrice ?? 0,
+            lastSold: undefined,
+            price: foundApi?.originalPrice ?? 0,
             vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
           }
           : item
@@ -416,6 +406,7 @@ export default function CreateBillPage() {
                     {/* Remove */}
                     <td className="px-3 py-2 align-top">
                       <Button
+                        className="cursor-pointer"
                         variant="ghost"
                         size="icon"
                         disabled={disableDelete}
@@ -444,7 +435,7 @@ export default function CreateBillPage() {
         <div className="flex items-center justify-between mt-6">
           <Button
             onClick={handleAddItem}
-            className="bg-purple-600 text-white hover:bg-purple-700 px-4 py-2 text-sm"
+            className="bg-purple-600 cursor-pointer text-white hover:bg-purple-700 px-4 py-2 text-sm"
           >
             <Plus className="h-4 w-4 mr-2" /> Add Item
           </Button>
