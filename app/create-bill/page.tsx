@@ -153,7 +153,6 @@ export default function CreateBillPage() {
           </div>
         </div>
 
-        {/* Items table (Original & Last Sold removed from columns) */}
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 text-gray-700">
@@ -189,21 +188,6 @@ export default function CreateBillPage() {
                           loading={productsLoading}
                           productsError={productsError}
                         />
-
-                        {/* helper line with original + last-sold below the select */}
-                        <div className="mt-1 text-xs text-gray-500 flex gap-3">
-                          <span>Orignal price: ₹{item.original ?? "-"}</span>
-                          <span>
-                            Last sold at:{" "}
-                            {item.lastSold ? (
-                              <span className="text-gray-700 font-medium">
-                                ₹{item.lastSold}
-                              </span>
-                            ) : (
-                              "-"
-                            )}
-                          </span>
-                        </div>
                       </div>
                     </td>
 

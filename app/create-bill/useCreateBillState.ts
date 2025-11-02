@@ -21,8 +21,6 @@ export function useCreateBillState() {
     {
       id: Date.now(),
       name: "",
-      original: 0,
-      lastSold: undefined,
       price: 0,
       qty: 1,
       vat: 5,
@@ -80,8 +78,6 @@ export function useCreateBillState() {
       {
         id: Date.now() + Math.floor(Math.random() * 1000),
         name: "",
-        original: 0,
-        lastSold: undefined,
         price: 0,
         qty: 1,
         vat: 5,
@@ -97,9 +93,7 @@ export function useCreateBillState() {
           ? {
               ...item,
               name,
-              original: foundApi?.originalPrice ?? 0,
-              lastSold: undefined,
-              price: foundApi?.originalPrice ?? 0,
+              price: foundApi?.price ?? 0,
               vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
             }
           : item
