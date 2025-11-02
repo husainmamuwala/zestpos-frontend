@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 // @ts-ignore
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
 // Sidebar is intentionally not included here so pages like /login do not show it.
 
 const geistSans = Geist({
@@ -31,6 +32,8 @@ export default function RootLayout({
         <div className="flex min-h-screen">
           <div className="antialiased w-full">{children}</div>
         </div>
+        {/* react-hot-toast container */}
+        <Toaster position="top-right" />
       </body>
     </html>
   );

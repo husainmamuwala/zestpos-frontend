@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { authApi } from "@/lib/api";
+import toast from "react-hot-toast";
 import { ProductFromApi, Customer, Item } from "./types";
 
 const STORAGE_KEY = "zestpos_create_bill_state";
@@ -50,6 +51,8 @@ export function useCreateBillState() {
             },
         ]
     );
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -226,11 +229,71 @@ export function useCreateBillState() {
     const total = items.reduce((sum, i) => sum + itemFinal(i), 0);
     const disableDelete = items.length === 1;
     const hasSelectedItem = items.some((i) => String(i.name || "").trim() !== "");
-    const saveDisabled = !hasSelectedItem;
+    const saveDisabled = !hasSelectedItem || !selectedCustomer || !invoiceDate || !supplyDate;
 
-    const handleSaveInvoice = () => {
+    const handleSaveInvoice = async () => {
         if (saveDisabled) return;
-        alert("Invoice saved (mock). Check console for payload.");
+        setSaving(true);
+        setSaveError(null);
+
+        try {
+            const today = new Date().toISOString().slice(0, 10);
+            const payload = {
+                customerId: selectedCustomer,
+                invoiceDate: invoiceDate || today,
+                supplyDate: supplyDate || today,
+                items: items.map((it) => ({
+                    itemName: it.name,
+                    price: Number(it.price) || 0,
+                    qty: Number(it.qty) || 0,
+                    vat: Number(it.vat) || 0,
+                })),
+            };
+
+            // Use authApi which has baseURL set and attaches token if present
+            const res = await authApi.post(`/invoice/create`, payload);
+
+            // On success, clear persisted state and reset local state
+            try {
+                if (typeof window !== "undefined") {
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            } catch (e) {
+                // ignore
+            }
+
+            setItems([
+                {
+                    id: Date.now(),
+                    name: "",
+                    price: 0,
+                    qty: 1,
+                    vat: 5,
+                },
+            ]);
+            setSelectedCustomer("");
+            setCustomer(null);
+            setInvoiceDate("");
+            setSupplyDate("");
+
+            // notify success
+            try {
+                const successMsg = res?.data?.message || "Invoice created successfully";
+                toast.success(successMsg);
+            } catch (e) {
+                // ignore
+            }
+
+            return res.data;
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            setSaveError(msg);
+            console.error("Error saving invoice:", err);
+            toast.error(msg || "Error saving invoice");
+            throw err;
+        } finally {
+            setSaving(false);
+        }
     };
 
     // Extra guard: persist items whenever items array changes.
@@ -268,6 +331,8 @@ export function useCreateBillState() {
         hasSelectedItem,
         saveDisabled,
         handleSaveInvoice,
+        saving,
+        saveError,
     };
 }
 
