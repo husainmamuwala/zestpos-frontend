@@ -6,7 +6,6 @@ const STORAGE_KEY = "zestpos_create_bill_state";
 
 interface StoredState {
     customer: string | null;
-    invoiceNo: string;
     invoiceDate: string;
     supplyDate: string;
     items: Item[];
@@ -28,7 +27,6 @@ const loadStateFromStorage = (): Partial<StoredState> => {
 export function useCreateBillState() {
     const savedState = loadStateFromStorage();
     const [customer, setCustomer] = useState<string | null>(savedState.customer ?? null);
-    const [invoiceNo, setInvoiceNo] = useState(savedState.invoiceNo ?? "");
     const [invoiceDate, setInvoiceDate] = useState(savedState.invoiceDate ?? "");
     const [supplyDate, setSupplyDate] = useState(savedState.supplyDate ?? "");
 
@@ -243,8 +241,6 @@ export function useCreateBillState() {
     return {
         customer,
         setCustomer,
-        invoiceNo,
-        setInvoiceNo,
         invoiceDate,
         setInvoiceDate,
         supplyDate,

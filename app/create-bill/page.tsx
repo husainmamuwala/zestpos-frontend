@@ -19,8 +19,6 @@ export default function CreateBillPage() {
   const {
     customer,
     setCustomer,
-    invoiceNo,
-    setInvoiceNo,
     invoiceDate,
     setInvoiceDate,
     supplyDate,
@@ -106,17 +104,7 @@ export default function CreateBillPage() {
               </Select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Invoice Number
-              </label>
-              <Input
-                type="text"
-                placeholder="INV-001"
-                value={invoiceNo}
-                onChange={(e) => setInvoiceNo(e.target.value)}
-              />
-            </div>
+            
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
