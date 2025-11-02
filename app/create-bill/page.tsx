@@ -176,7 +176,6 @@ export default function CreateBillPage() {
                     exit={{ opacity: 0, y: -6 }}
                     className="border-b last:border-b-0 hover:bg-gray-50"
                   >
-                    {/* Item (select full width in first column) */}
                     <td className="px-3 py-2 align-top">
                       <div className="w-full">
                         <ItemSelect

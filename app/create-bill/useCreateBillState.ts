@@ -2,11 +2,35 @@ import { useEffect, useState } from "react";
 import { authApi } from "@/lib/api";
 import { ProductFromApi, Customer, Item } from "./types";
 
+const STORAGE_KEY = "zestpos_create_bill_state";
+
+interface StoredState {
+  customer: string | null;
+  invoiceNo: string;
+  invoiceDate: string;
+  supplyDate: string;
+  items: Item[];
+  selectedCustomer: string;
+}
+
+const loadStateFromStorage = (): Partial<StoredState> => {
+  if (typeof window === "undefined") return {};
+  
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.error("Error loading state from localStorage:", error);
+    return {};
+  }
+};
+
 export function useCreateBillState() {
-  const [customer, setCustomer] = useState<string | null>(null);
-  const [invoiceNo, setInvoiceNo] = useState("");
-  const [invoiceDate, setInvoiceDate] = useState("");
-  const [supplyDate, setSupplyDate] = useState("");
+  const savedState = loadStateFromStorage();
+  const [customer, setCustomer] = useState<string | null>(savedState.customer ?? null);
+  const [invoiceNo, setInvoiceNo] = useState(savedState.invoiceNo ?? "");
+  const [invoiceDate, setInvoiceDate] = useState(savedState.invoiceDate ?? "");
+  const [supplyDate, setSupplyDate] = useState(savedState.supplyDate ?? "");
 
   const [productsList, setProductsList] = useState<ProductFromApi[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
@@ -15,17 +39,19 @@ export function useCreateBillState() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [selectedCustomer, setSelectedCustomer] = useState<string>(savedState.selectedCustomer ?? "");
 
-  const [items, setItems] = useState<Item[]>([
-    {
-      id: Date.now(),
-      name: "",
-      price: 0,
-      qty: 1,
-      vat: 5,
-    },
-  ]);
+  const [items, setItems] = useState<Item[]>(
+    savedState.items ?? [
+      {
+        id: Date.now(),
+        name: "",
+        price: 0,
+        qty: 1,
+        vat: 5,
+      },
+    ]
+  );
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -66,29 +92,51 @@ export function useCreateBillState() {
     setFilteredCustomers(filtered);
   };
 
+  const saveStateToStorage = (newState: Partial<StoredState>) => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const currentState = loadStateFromStorage();
+      const updatedState = { ...currentState, ...newState };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
+    } catch (error) {
+      console.error("Error saving state to localStorage:", error);
+    }
+  };
+
   const handleCustomerSelect = (custId: string) => {
-    setSelectedCustomer(custId);
     const found = customers.find((c) => c._id === custId);
-    setCustomer(found ? found.name : null);
+    const newCustomerName = found ? found.name : null;
+    
+    setSelectedCustomer(custId);
+    setCustomer(newCustomerName);
+    saveStateToStorage({
+      selectedCustomer: custId,
+      customer: newCustomerName,
+    });
   };
 
   const handleAddItem = () => {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        name: "",
-        price: 0,
-        qty: 1,
-        vat: 5,
-      },
-    ]);
+    setItems((prev) => {
+      const newItems = [
+        ...prev,
+        {
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          name: "",
+          price: 0,
+          qty: 1,
+          vat: 5,
+        },
+      ];
+      saveStateToStorage({ items: newItems });
+      return newItems;
+    });
   };
 
   const handleItemChange = (id: number, name: string) => {
     const foundApi = productsList.find((i) => i.name === name);
-    setItems((prev) =>
-      prev.map((item) =>
+    setItems((prev) => {
+      const newItems = prev.map((item) =>
         item.id === id
           ? {
               ...item,
@@ -97,13 +145,15 @@ export function useCreateBillState() {
               vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
             }
           : item
-      )
-    );
+      );
+      saveStateToStorage({ items: newItems });
+      return newItems;
+    });
   };
 
   const handleChange = (id: number, field: string, value: unknown) => {
-    setItems((prev) =>
-      prev.map((item) =>
+    setItems((prev) => {
+      const newItems = prev.map((item) =>
         item.id === id
           ? {
               ...item,
@@ -121,14 +171,18 @@ export function useCreateBillState() {
                   : value,
             }
           : item
-      )
-    );
+      );
+      saveStateToStorage({ items: newItems });
+      return newItems;
+    });
   };
 
   const handleRemove = (id: number) => {
     setItems((prev) => {
       if (prev.length <= 1) return prev;
-      return prev.filter((i) => i.id !== id);
+      const newItems = prev.filter((i) => i.id !== id);
+      saveStateToStorage({ items: newItems });
+      return newItems;
     });
   };
 
@@ -147,17 +201,42 @@ export function useCreateBillState() {
   const handleSaveInvoice = () => {
     if (saveDisabled) return;
     alert("Invoice saved (mock). Check console for payload.");
+    // Clear storage after successful save
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  // Wrap state setters to save to localStorage
+  const wrappedSetInvoiceNo = (value: string) => {
+    setInvoiceNo(value);
+    saveStateToStorage({ invoiceNo: value });
+  };
+
+  const wrappedSetInvoiceDate = (value: string) => {
+    setInvoiceDate(value);
+    saveStateToStorage({ invoiceDate: value });
+  };
+
+  const wrappedSetSupplyDate = (value: string) => {
+    setSupplyDate(value);
+    saveStateToStorage({ supplyDate: value });
+  };
+
+  // Clear storage after successful save
+  const handleSaveAndClearStorage = () => {
+    if (saveDisabled) return;
+    handleSaveInvoice();
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return {
     customer,
     setCustomer,
     invoiceNo,
-    setInvoiceNo,
+    setInvoiceNo: wrappedSetInvoiceNo,
     invoiceDate,
-    setInvoiceDate,
+    setInvoiceDate: wrappedSetInvoiceDate,
     supplyDate,
-    setSupplyDate,
+    setSupplyDate: wrappedSetSupplyDate,
     productsList,
     productsLoading,
     productsError,
