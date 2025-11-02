@@ -2,20 +2,12 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/utils/convert";
 
-const mockBills = Array.from({ length: 42 }).map((_, i) => ({
-  id: i + 1,
-  customer: `Customer ${i + 1}`,
-  total: (Math.random() * 500).toFixed(2),
-  date: "2025-10-29",
-}));
-
-export default function BillsTable() {
+export default function BillsTable({invoices}: {invoices: any[]}) {
   const [page, setPage] = useState(1);
   const perPage = 10;
-  const totalPages = Math.ceil(mockBills.length / perPage);
-
-  const data = mockBills.slice((page - 1) * perPage, page * perPage);
+  const totalPages = Math.ceil(invoices.length / perPage);
 
   return (
     <div className="bg-white shadow-md rounded-lg p-4">
@@ -29,12 +21,12 @@ export default function BillsTable() {
           </tr>
         </thead>
         <tbody>
-          {data.map((bill) => (
-            <tr key={bill.id} className="border-b hover:bg-gray-50">
-              <td className="px-4 py-2">{bill.id}</td>
-              <td className="px-4 py-2">{bill.customer}</td>
-              <td className="px-4 py-2">{bill.total}</td>
-              <td className="px-4 py-2">{bill.date}</td>
+          {invoices.map((invoice) => (
+            <tr key={invoice.id} className="border-b hover:bg-gray-50">
+              <td className="px-4 py-2">{invoice._id}</td>
+              <td className="px-4 py-2">{invoice.customer.name}</td>
+              <td className="px-4 py-2">{invoice.totalAmount.toFixed(2)}</td>
+              <td className="px-4 py-2">{formatDate(invoice.invoiceDate)}</td>
             </tr>
           ))}
         </tbody>
