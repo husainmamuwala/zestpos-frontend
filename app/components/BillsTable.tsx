@@ -24,7 +24,7 @@ export default function BillsTable() {
           <tr>
             <th className="px-4 py-2 text-left">Bill ID</th>
             <th className="px-4 py-2 text-left">Customer</th>
-            <th className="px-4 py-2 text-left">Total (₹)</th>
+            <th className="px-4 py-2 text-left">Total (OMR)</th>
             <th className="px-4 py-2 text-left">Date</th>
           </tr>
         </thead>

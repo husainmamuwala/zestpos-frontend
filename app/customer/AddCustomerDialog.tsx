@@ -54,7 +54,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogTrigger asChild>
       <Button className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white">
-        <span className="flex items-center"><span className="mr-2">+</span> Add Customer</span>
+        <span className="flex items-center"><span className="mr-2">+</span>Add Account</span>
       </Button>
     </DialogTrigger>
     <DialogContent className="sm:max-w-lg">
@@ -63,15 +63,15 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
       </DialogHeader>
       <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 mt-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Name<span className="text-red-600">*</span></label>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Customer name" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Address<span className="text-red-600">*</span></label>
           <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Customer address" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Phone<span className="text-red-600">*</span></label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +91 98765 43210" />
         </div>
         <div>
@@ -92,7 +92,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
             Cancel
           </Button>
           <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white" disabled={saving}>
-            {saving ? "Saving..." : "Save Customer"}
+            {saving ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </form>

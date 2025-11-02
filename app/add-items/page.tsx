@@ -9,6 +9,7 @@ import {
   DialogFooter,
   DialogTitle,
   DialogDescription,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Trash2, Edit2, Plus } from "lucide-react";
@@ -34,7 +35,7 @@ type ProductInput = {
 
 function normalizeProduct(p: ProductInput): Product {
   return {
-    _id: String(p?._id ?? p?.id ?? ""), // tolerate various shapes
+    _id: String(p?._id ?? p?.id ?? ""),
     name: String(p?.name ?? ""),
     price: Number(p?.price ?? 0),
     vat: Number(p?.vat ?? 0),
@@ -47,18 +48,32 @@ function normalizeProducts(list: unknown[]): Product[] {
 
 /** ---------- Component ---------- **/
 export default function AddItemsPage() {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState<string>("");
-  const [vat, setVat] = useState<string>("5"); // default 5%
+  /* products list & top-level states */
   const [products, setProducts] = useState<Product[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null); // _id string when editing
   const [error, setError] = useState<string | null>(null);
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // delete dialog
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // ADD modal state (new)
+  const [addDialogOpen, setAddDialogOpen] = useState<boolean>(false);
+  const [addName, setAddName] = useState<string>("");
+  const [addPrice, setAddPrice] = useState<string>("0.000");
+  const [addVat, setAddVat] = useState<string>("5");
+  const [addError, setAddError] = useState<string | null>(null);
+  const [addSaving, setAddSaving] = useState<boolean>(false);
+
+  // EDIT modal state (existing)
+  const [editDialogOpen, setEditDialogOpen] = useState<boolean>(false);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [editName, setEditName] = useState<string>("");
+  const [editPrice, setEditPrice] = useState<string>("0.000");
+  const [editVat, setEditVat] = useState<string>("0");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState<boolean>(false);
 
   // Load from localStorage (if present) on mount
   useEffect(() => {
@@ -80,17 +95,12 @@ export default function AddItemsPage() {
       try {
         const response = await fetch(`${API_BASE_URL}/product/products`);
         if (!response.ok) {
-          // don't throw to avoid noisy user errors on temporary network issues
           console.warn("Failed to fetch products from API");
           return;
         }
         const fetched = await response.json();
-        // try to extract array in either { products: [...] } or raw array shape
         const fetchedArr = fetched?.products ?? fetched;
-        const fetchedProducts = normalizeProducts(fetchedArr);
-
-        if (!Array.isArray(fetchedProducts)) return;
-
+        const fetchedProducts = normalizeProducts(Array.isArray(fetchedArr) ? fetchedArr : []);
         // preserve local temp items (temp- prefix)
         let localTemps: Product[] = [];
         try {
@@ -126,80 +136,49 @@ export default function AddItemsPage() {
     }
   }, [products]);
 
-  const resetForm = () => {
-    setName("");
-    setPrice("");
-    setVat("5");
-    setEditingId(null);
-    setError(null);
+  /* ---------- ADD Modal handlers ---------- */
+  const openAddDialog = () => {
+    setAddError(null);
+    setAddName("");
+    setAddPrice("0.000");
+    setAddVat("5");
+    setAddDialogOpen(true);
+  };
+  const closeAddDialog = () => {
+    setAddDialogOpen(false);
+    setAddError(null);
   };
 
-  const validate = () => {
-    if (!name.trim()) {
-      setError("Product name is required.");
+  const validateAdd = (): boolean => {
+    if (!addName.trim()) {
+      setAddError("Product name is required.");
       return false;
     }
-    const p = parseFloat(price);
+    const p = parseFloat(addPrice);
     if (Number.isNaN(p) || p <= 0) {
-      setError("Price must be a number greater than 0.");
+      setAddError("Price must be a number greater than 0.");
       return false;
     }
-    const v = parseFloat(vat);
+    const v = parseFloat(addVat);
     if (Number.isNaN(v) || v < 0) {
-      setError("VAT must be a valid non-negative number.");
+      setAddError("VAT must be a valid non-negative number.");
       return false;
     }
-    setError(null);
+    setAddError(null);
     return true;
   };
 
-  const handleSave = async (e?: React.FormEvent) => {
+  const handleAddSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!validate()) return;
+    if (!validateAdd()) return;
 
-    const p = parseFloat(price);
-    const v = parseFloat(vat);
-
-    // EDIT flow
-    if (editingId) {
-      setIsSaving(true);
-      const prev = products;
-      // optimistic update
-      setProducts((cur) =>
-        cur.map((prod) => (prod._id === editingId ? { ...prod, name: name.trim(), price: p, vat: v } : prod))
-      );
-
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/product/update-product/${encodeURIComponent(editingId)}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: name.trim(), price: p, vat: v }),
-          }
-        );
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data?.message ?? "Failed to update product.");
-        }
-        const updated = normalizeProduct(await response.json());
-        setProducts((cur) => cur.map((prod) => (prod._id === editingId ? updated : prod)));
-        resetForm();
-      } catch (err: unknown) {
-        setProducts(prev); // rollback
-        setError((err as { message?: string })?.message ?? "An error occurred while updating the product.");
-      } finally {
-        setIsSaving(false);
-      }
-      return;
-    }
-
-    // CREATE flow
-    setIsSaving(true);
+    setAddSaving(true);
     const tempId = `temp-${Date.now()}`;
+    const p = parseFloat(addPrice);
+    const v = parseFloat(addVat);
     const newItem: Product = {
       _id: tempId,
-      name: name.trim(),
+      name: addName.trim(),
       price: p,
       vat: v,
     };
@@ -225,34 +204,22 @@ export default function AddItemsPage() {
         throw new Error(data?.message ?? "Failed to add product.");
       }
 
-      // server might return either the created product or a wrapper; normalize both
       const savedRaw = await response.json();
-      // savedRaw might be { product: {...} } or the product object directly
       const savedProduct = normalizeProduct(savedRaw?.product ?? savedRaw);
 
       // replace the temp with the saved
       setProducts((prev) => prev.map((prod) => (prod._id === tempId ? savedProduct : prod)));
-      resetForm();
+      closeAddDialog();
     } catch (err: unknown) {
       // remove temp item
       setProducts((prev) => prev.filter((prod) => prod._id !== tempId));
-      setError((err as { message?: string })?.message ?? "An error occurred while saving the product.");
+      setAddError((err as { message?: string })?.message ?? "An error occurred while saving the product.");
     } finally {
-      setIsSaving(false);
+      setAddSaving(false);
     }
   };
 
-  const handleEdit = (id: string) => {
-    const prod = products.find((p) => p._id === id);
-    if (!prod) return;
-    setEditingId(prod._id);
-    setName(prod.name);
-    setPrice(String(prod.price));
-    setVat(String(prod.vat));
-    setError(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
+  /* ---------- DELETE ---------- */
   const openDeleteDialog = (id: string) => {
     setProductToDelete(id);
     setIsDialogOpen(true);
@@ -264,7 +231,6 @@ export default function AddItemsPage() {
   };
 
   const confirmDelete = async () => {
-    console.log("Deleting product with ID:", productToDelete);
     if (!productToDelete) return;
 
     setIsDeleting(true);
@@ -287,9 +253,7 @@ export default function AddItemsPage() {
 
       closeDeleteDialog();
     } catch (err: unknown) {
-      // rollback
       setProducts(prev);
-      console.error("Error deleting product:", err);
       setError((err as { message?: string })?.message ?? "An error occurred while deleting the product.");
       closeDeleteDialog();
     } finally {
@@ -297,77 +261,133 @@ export default function AddItemsPage() {
     }
   };
 
+  /* ---------- EDIT MODAL ---------- */
+  const openEditDialog = (id: string) => {
+    const prod = products.find((p) => p._id === id);
+    if (!prod) return;
+    setEditProduct(prod);
+    setEditName(prod.name);
+    setEditPrice(prod.price?.toFixed(3) ?? "0.000");
+    setEditVat(String(prod.vat ?? 0));
+    setEditError(null);
+    setEditDialogOpen(true);
+  };
+
+  const closeEditDialog = () => {
+    setEditDialogOpen(false);
+    setEditProduct(null);
+    setEditError(null);
+  };
+
+  const handleUpdate = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!editProduct) return;
+
+    // basic validation
+    if (!editName.trim()) {
+      setEditError("Product name is required.");
+      return;
+    }
+    const p = parseFloat(editPrice);
+    if (Number.isNaN(p) || p <= 0) {
+      setEditError("Price must be a number greater than 0.");
+      return;
+    }
+    const v = parseFloat(editVat);
+    if (Number.isNaN(v) || v < 0) {
+      setEditError("VAT must be a valid non-negative number.");
+      return;
+    }
+
+    setEditSaving(true);
+    const prev = products;
+    // optimistic update
+    setProducts((cur) => cur.map((prod) => (prod._id === editProduct._id ? { ...prod, name: editName.trim(), price: p, vat: v } : prod)));
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/product/update-product/${encodeURIComponent(editProduct._id)}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: editName.trim(), price: p, vat: v }),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.message ?? "Failed to update product.");
+      }
+
+      const updatedRaw = await response.json();
+      const updatedProduct = normalizeProduct(updatedRaw?.product ?? updatedRaw);
+
+      setProducts((cur) => cur.map((prod) => (prod._id === updatedProduct._id ? updatedProduct : prod)));
+      closeEditDialog();
+    } catch (err: unknown) {
+      // rollback
+      setProducts(prev);
+      setEditError((err as { message?: string })?.message ?? "An error occurred while updating the product.");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  /* ---------- Render ---------- */
   return (
     <div className="p-10 mx-auto">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Add / Manage Products</h1>
-        <p className="text-sm text-gray-600">Create products used in billing. VAT defaults to 5%.</p>
+      <header className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Add / Manage Products</h1>
+          <p className="text-sm text-gray-600">Create products used in billing.</p>
+        </div>
+
+        {/* Add product button -> opens modal */}
+        <div className="flex items-center gap-3">
+          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Plus className="h-4 w-4 mr-2" /> Add Product
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Product</DialogTitle>
+                <DialogDescription>Fill product details and click Add.</DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleAddSubmit} className="grid grid-cols-1 gap-4 mt-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Product name</label>
+                  <Input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="e.g. Mango Syrup" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                  <Input value={addPrice} onChange={(e) => setAddPrice(e.target.value)} placeholder="0.000" inputMode="decimal" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">VAT %</label>
+                  <Input value={addVat} onChange={(e) => setAddVat(e.target.value)} placeholder="5" inputMode="numeric" />
+                </div>
+
+                {addError && <div className="text-sm text-red-600">{addError}</div>}
+
+                <DialogFooter className="flex justify-end gap-2">
+                  <Button variant="outline" type="button" onClick={closeAddDialog} disabled={addSaving}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={addSaving}>
+                    {addSaving ? "Adding..." : "Add"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </header>
-
-      <form
-        onSubmit={handleSave}
-        className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end mb-6"
-        aria-label="Add product form"
-      >
-        <div className="md:col-span-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Product name</label>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Mango Syrup"
-            aria-label="Product name"
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
-          <Input
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="0.000"
-            inputMode="decimal"
-            aria-label="Product price"
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">VAT %</label>
-          <Input
-            value={vat}
-            onChange={(e) => setVat(e.target.value)}
-            placeholder="5"
-            inputMode="numeric"
-            aria-label="VAT percent"
-          />
-        </div>
-
-        <div className="md:col-span-2 flex gap-2">
-          <Button
-            type="submit"
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 flex items-center"
-            disabled={isSaving}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {isSaving ? (editingId ? "Updating..." : "Adding...") : editingId ? "Update" : "Add"}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="px-4 py-2"
-            onClick={resetForm}
-            disabled={isSaving}
-          >
-            Reset
-          </Button>
-        </div>
-
-        {error && (
-          <div className="md:col-span-12 text-sm text-red-600" role="alert">
-            {error}
-          </div>
-        )}
-      </form>
 
       <section>
         <h2 className="text-lg font-medium text-gray-800 mb-3">Products</h2>
@@ -396,7 +416,7 @@ export default function AddItemsPage() {
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => handleEdit(p._id)}
+                          onClick={() => openEditDialog(p._id)}
                           title="Edit"
                           className="inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100"
                         >
@@ -421,6 +441,44 @@ export default function AddItemsPage() {
           </div>
         )}
       </section>
+
+      {/* Edit product dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+            <DialogDescription>Change details and click Update to save.</DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdate} className="grid grid-cols-1 gap-4 mt-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Product name</label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Product name" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+              <Input value={editPrice} onChange={(e) => setEditPrice(e.target.value)} placeholder="0.000" inputMode="decimal" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">VAT %</label>
+              <Input value={editVat} onChange={(e) => setEditVat(e.target.value)} placeholder="5" inputMode="numeric" />
+            </div>
+
+            {editError && <div className="text-sm text-red-600">{editError}</div>}
+
+            <DialogFooter className="flex justify-end gap-2">
+              <Button variant="outline" type="button" onClick={closeEditDialog} disabled={editSaving}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={editSaving}>
+                {editSaving ? "Updating..." : "Update"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete confirmation dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

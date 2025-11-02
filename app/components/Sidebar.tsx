@@ -9,7 +9,7 @@ const navItems = [
   { name: "Create Invoice", href: "/create-bill", icon: FilePlus2 },
   { name: "Add Items", href: "/add-items", icon: PackagePlus },
   { name: "All Invoices", href: "/", icon: FileText },
-  { name: "Customers", href: "/customer", icon: Users2 }
+  { name: "Account Ledger", href: "/customer", icon: Users2 }
 ];
 
 function normalize(p?: string | null) {

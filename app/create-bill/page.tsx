@@ -23,9 +23,8 @@ type ProductFromApi = {
   name: string;
   originalPrice?: number;
   price?: number;
+  vat?: number;
 };
-
-type ProductsApiResponse = ProductFromApi[] | { products: ProductFromApi[] };
 
 type Customer = {
   _id: string;
@@ -77,6 +76,8 @@ function normalizeApiProduct(p: unknown): ProductFromApi {
 
   const price = typeof obj.price === "number" ? obj.price : undefined;
 
+  const vat = typeof obj.vat === "number" ? obj.vat : undefined;
+
   return {
     _id,
     id:
@@ -87,10 +88,10 @@ function normalizeApiProduct(p: unknown): ProductFromApi {
     name,
     originalPrice,
     price,
+    vat,
   };
 }
 
-/* last sold mock (still used in helper line) */
 const lastSoldPrices: Record<string, Record<string, number>> = {
   "ABC Traders": { "Mango Syrup": 10, "Cola Base": 9 },
   "Star Beverages": { "Orange Flavour": 7 },
@@ -113,7 +114,7 @@ export default function CreateBillPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<string>(""); // stores _id of selected customer
 
-  // Start with one empty row by default
+  // Start with one empty row by default — vat default 5
   const [items, setItems] = useState<
     {
       id: number;
@@ -122,7 +123,7 @@ export default function CreateBillPage() {
       lastSold?: number;
       price: number;
       qty: number;
-      vat: number; 
+      vat: number;
     }[]
   >([
     {
@@ -177,7 +178,8 @@ export default function CreateBillPage() {
           throw new Error(bodyText);
         }
 
-        const payload = (await res.json()) as unknown;
+        const data = (await res.json()) as unknown;
+        const payload = data;
 
         let arr: ProductFromApi[] = [];
 
@@ -259,7 +261,7 @@ export default function CreateBillPage() {
 
         if (!mounted) return;
 
-        // normalize customers into { _id, name, phone }
+        // normalize customers into { _id, name, phone, address }
         const normalized: Customer[] = arr.map((it) => {
           const obj = (it as Record<string, unknown>) ?? {};
           const _id =
@@ -283,11 +285,7 @@ export default function CreateBillPage() {
               ? obj.mobile
               : "";
           const address =
-            typeof obj.address === "string"
-              ? obj.address
-              : typeof obj.address === "string"
-              ? obj.address
-              : "";
+            typeof obj.address === "string" ? obj.address : "";
           return { _id, name, phone, address };
         });
 
@@ -339,8 +337,8 @@ export default function CreateBillPage() {
     ]);
   };
 
+  // IMPORTANT FIX: set vat from product if available
   const handleItemChange = (id: number, name: string) => {
-    // find product by name from fetched list
     const foundApi = productsList.find((i) => i.name === name);
 
     setItems((prev) =>
@@ -351,12 +349,12 @@ export default function CreateBillPage() {
               name,
               original: foundApi?.originalPrice ?? 0,
               lastSold: customer ? lastSoldPrices[customer]?.[name] : undefined,
-              // default price: last sold for that customer if available, otherwise original
-              price: customer
-                ? lastSoldPrices[customer]?.[name] ??
-                  foundApi?.originalPrice ??
-                  0
-                : foundApi?.originalPrice ?? 0,
+              price:
+                customer
+                  ? lastSoldPrices[customer]?.[name] ?? foundApi?.originalPrice ?? 0
+                  : foundApi?.originalPrice ?? 0,
+              // set vat from product if present; otherwise keep existing vat (or default)
+              vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
             }
           : item
       )
@@ -429,7 +427,6 @@ export default function CreateBillPage() {
     alert("Invoice saved (mock). Check console for payload.");
   };
 
-
   function ItemSelect({
     value,
     onValueChange,
@@ -476,9 +473,7 @@ export default function CreateBillPage() {
             </div>
           ) : products.length === 0 ? (
             <div className="px-3 py-2 text-sm text-gray-500">
-              {productsError
-                ? `Failed to load products`
-                : "No products available"}
+              {productsError ? `Failed to load products` : "No products available"}
             </div>
           ) : filtered.length === 0 ? (
             <div className="px-3 py-2 text-sm text-gray-500">
@@ -539,8 +534,7 @@ export default function CreateBillPage() {
                     {filteredCustomers.slice(0, 50).map((cust) => (
                       <SelectItem key={cust._id} value={cust._id}>
                         {cust.name}
-
-                       <span className="">{cust.address ? `- ${cust.address}` : ""}</span> 
+                        <span className="">{cust.address ? ` - ${cust.address}` : ""}</span>
                       </SelectItem>
                     ))}
                     {filteredCustomers.length === 0 && (
@@ -685,7 +679,7 @@ export default function CreateBillPage() {
                       <Input
                         type="number"
                         min={0}
-                        value={String(item.vat)}
+                        value={String(item.vat ?? "")}
                         onChange={(e) =>
                           handleChange(item.id, "vat", e.target.value)
                         }

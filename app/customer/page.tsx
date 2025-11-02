@@ -244,8 +244,8 @@ export default function CustomersPage() {
     <div className="p-8 mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Customers</h1>
-          <p className="text-sm text-gray-600">Add new customers and view existing ones.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Account Ledgers</h1>
+          <p className="text-sm text-gray-600">Add new account ledger and view existing ones.</p>
         </div>
 
         <div className="flex items-center gap-3">
