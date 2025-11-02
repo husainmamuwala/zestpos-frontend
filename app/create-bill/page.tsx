@@ -12,11 +12,9 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { authApi } from "@/lib/api";
+import { ItemSelect } from "@/app/components/ItemSelect";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
-
-/** ---------- Types ---------- **/
 type ProductFromApi = {
   _id?: string;
   id?: string | number;
@@ -33,88 +31,26 @@ type Customer = {
   address?: string;
 };
 
-/** ---------- Type Guards & Helpers ---------- **/
-function isProductsArray(x: unknown): x is ProductFromApi[] {
-  return (
-    Array.isArray(x) &&
-    x.every((it) => typeof (it as ProductFromApi).name === "string")
-  );
-}
-
-function isProductsWrapper(x: unknown): x is { products: unknown } {
-  return typeof x === "object" && x !== null && "products" in (x as object);
-}
-
-/** Safely normalize unknown product shapes into ProductFromApi */
-function normalizeApiProduct(p: unknown): ProductFromApi {
-  const obj = (p as Record<string, unknown>) ?? {};
-
-  const _id =
-    typeof obj._id === "string"
-      ? obj._id
-      : typeof obj.id === "string"
-      ? obj.id
-      : typeof obj.id === "number"
-      ? String(obj.id)
-      : undefined;
-
-  const name =
-    typeof obj.name === "string"
-      ? obj.name
-      : typeof obj.product_name === "string"
-      ? obj.product_name
-      : "";
-
-  const originalPrice =
-    typeof obj.originalPrice === "number"
-      ? obj.originalPrice
-      : typeof obj.original_price === "number"
-      ? obj.original_price
-      : typeof obj.price === "number"
-      ? obj.price
-      : undefined;
-
-  const price = typeof obj.price === "number" ? obj.price : undefined;
-
-  const vat = typeof obj.vat === "number" ? obj.vat : undefined;
-
-  return {
-    _id,
-    id:
-      _id ??
-      (typeof obj.id === "string" || typeof obj.id === "number"
-        ? obj.id
-        : undefined),
-    name,
-    originalPrice,
-    price,
-    vat,
-  };
-}
-
 const lastSoldPrices: Record<string, Record<string, number>> = {
   "ABC Traders": { "Mango Syrup": 10, "Cola Base": 9 },
   "Star Beverages": { "Orange Flavour": 7 },
 };
 
 export default function CreateBillPage() {
-  const [customer, setCustomer] = useState<string | null>(null); // name used by lastSoldPrices
+  const [customer, setCustomer] = useState<string | null>(null);
   const [invoiceNo, setInvoiceNo] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("");
   const [supplyDate, setSupplyDate] = useState("");
 
-  // products list fetched from API (used in dropdown)
   const [productsList, setProductsList] = useState<ProductFromApi[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
 
-  // customers list + search
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<string>(""); // stores _id of selected customer
 
-  // Start with one empty row by default — vat default 5
   const [items, setItems] = useState<
     {
       id: number;
@@ -138,175 +74,39 @@ export default function CreateBillPage() {
     },
   ]);
 
-  // fetch products from API on mount
   useEffect(() => {
-    let mounted = true;
-
     const fetchProducts = async () => {
       setProductsLoading(true);
       setProductsError(null);
       try {
-        const res = await fetch(`${API_BASE_URL}/product/products`);
-        if (!res.ok) {
-          // try to get body text or json safely
-          let bodyText = `Failed to fetch products: ${res.status}`;
-          try {
-            const maybeJson = (await res.json()) as unknown;
-            if (isProductsArray(maybeJson)) {
-              if (!mounted) return;
-              setProductsList(maybeJson.map(normalizeApiProduct));
-              return;
-            }
-            if (
-              typeof maybeJson === "object" &&
-              maybeJson !== null &&
-              "message" in maybeJson
-            ) {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-              bodyText = String(
-                (maybeJson as Record<string, unknown>).message ?? bodyText
-              );
-            }
-          } catch {
-            try {
-              const txt = await res.text();
-              if (txt) bodyText = txt;
-            } catch {
-              /* ignore */
-            }
-          }
-          throw new Error(bodyText);
-        }
-
-        const data = (await res.json()) as unknown;
-        const payload = data;
-
-        let arr: ProductFromApi[] = [];
-
-        if (isProductsArray(payload)) {
-          arr = payload.map(normalizeApiProduct);
-        } else if (isProductsWrapper(payload)) {
-          const maybe = (payload as { products: unknown }).products;
-          if (isProductsArray(maybe)) {
-            arr = maybe.map(normalizeApiProduct);
-          } else {
-            throw new Error(
-              "Invalid products response shape (wrapper.products not array)"
-            );
-          }
-        } else {
-          throw new Error("Invalid products response shape");
-        }
-
-        if (!mounted) return;
-        setProductsList(arr);
+        const res = await authApi.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/product/products`);
+        setProductsList(res.data.products);
       } catch (err: unknown) {
         const errMsg = err instanceof Error ? err.message : String(err);
         console.warn("Failed to fetch products list:", errMsg);
-        if (mounted) {
-          setProductsError(errMsg);
-          setProductsList([]); // keep empty until API returns successfully
-        }
+        setProductsError(errMsg);
+        setProductsList([]);
       } finally {
-        if (mounted) setProductsLoading(false);
+        setProductsLoading(false);
       }
     };
-
     fetchProducts();
-    return () => {
-      mounted = false;
-    };
   }, []);
 
-  // fetch customers for dropdown on mount
   useEffect(() => {
-    let mounted = true;
     const fetchCustomers = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/customer/customers`);
-        if (!res.ok) {
-          // try to extract message
-          let msg = `Failed to fetch customers (${res.status})`;
-          try {
-            const json = (await res.json()) as unknown;
-            if (
-              json &&
-              typeof json === "object" &&
-              "message" in (json as Record<string, unknown>)
-            ) {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-              msg = String((json as Record<string, unknown>).message ?? msg);
-            }
-          } catch {
-            // ignore
-          }
-          throw new Error(msg);
-        }
-
-        const payload = (await res.json()) as unknown;
-        let arr: unknown[] = [];
-        if (Array.isArray(payload)) {
-          arr = payload;
-        } else if (
-          payload &&
-          typeof payload === "object" &&
-          "customers" in payload
-        ) {
-          const maybe = (payload as Record<string, unknown>).customers;
-          if (Array.isArray(maybe)) arr = maybe;
-          else throw new Error("Invalid customers response shape");
-        } else {
-          throw new Error("Invalid customers response shape");
-        }
-
-        if (!mounted) return;
-
-        // normalize customers into { _id, name, phone, address }
-        const normalized: Customer[] = arr.map((it) => {
-          const obj = (it as Record<string, unknown>) ?? {};
-          const _id =
-            typeof obj._id === "string"
-              ? obj._id
-              : typeof obj.id === "string"
-              ? obj.id
-              : typeof obj.id === "number"
-              ? String(obj.id)
-              : "";
-          const name =
-            typeof obj.name === "string"
-              ? obj.name
-              : typeof obj.customerName === "string"
-              ? obj.customerName
-              : "";
-          const phone =
-            typeof obj.phone === "string"
-              ? obj.phone
-              : typeof obj.mobile === "string"
-              ? obj.mobile
-              : "";
-          const address =
-            typeof obj.address === "string" ? obj.address : "";
-          return { _id, name, phone, address };
-        });
-
-        setCustomers(normalized);
-        setFilteredCustomers(normalized);
+        const res = await authApi.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/customer/customers`);
+        setCustomers(res.data.customers);
+        setFilteredCustomers(res.data.customers);
       } catch (err: unknown) {
         console.warn("Error fetching customers:", err);
-        if (mounted) {
-          setCustomers([]);
-          setFilteredCustomers([]);
-        }
       }
     };
 
     fetchCustomers();
-    return () => {
-      mounted = false;
-    };
   }, []);
 
-  // Handle search input
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     const filtered = customers.filter((cust) =>
@@ -317,7 +117,6 @@ export default function CreateBillPage() {
 
   const handleCustomerSelect = (custId: string) => {
     setSelectedCustomer(custId);
-    // set 'customer' (name) so lastSoldPrices lookup continues to work
     const found = customers.find((c) => c._id === custId);
     setCustomer(found ? found.name : null);
   };
@@ -337,7 +136,6 @@ export default function CreateBillPage() {
     ]);
   };
 
-  // IMPORTANT FIX: set vat from product if available
   const handleItemChange = (id: number, name: string) => {
     const foundApi = productsList.find((i) => i.name === name);
 
@@ -345,17 +143,16 @@ export default function CreateBillPage() {
       prev.map((item) =>
         item.id === id
           ? {
-              ...item,
-              name,
-              original: foundApi?.originalPrice ?? 0,
-              lastSold: customer ? lastSoldPrices[customer]?.[name] : undefined,
-              price:
-                customer
-                  ? lastSoldPrices[customer]?.[name] ?? foundApi?.originalPrice ?? 0
-                  : foundApi?.originalPrice ?? 0,
-              // set vat from product if present; otherwise keep existing vat (or default)
-              vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
-            }
+            ...item,
+            name,
+            original: foundApi?.originalPrice ?? 0,
+            lastSold: customer ? lastSoldPrices[customer]?.[name] : undefined,
+            price:
+              customer
+                ? lastSoldPrices[customer]?.[name] ?? foundApi?.originalPrice ?? 0
+                : foundApi?.originalPrice ?? 0,
+            vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
+          }
           : item
       )
     );
@@ -366,35 +163,32 @@ export default function CreateBillPage() {
       prev.map((item) =>
         item.id === id
           ? {
-              ...item,
-              // ensure numeric fields are converted properly
-              [field]:
-                field === "price" || field === "vat"
+            ...item,
+            [field]:
+              field === "price" || field === "vat"
+                ? (() => {
+                  const n = Number(value);
+                  return Number.isFinite(n) ? n : 0;
+                })()
+                : field === "qty"
                   ? (() => {
-                      const n = Number(value);
-                      return Number.isFinite(n) ? n : 0;
-                    })()
-                  : field === "qty"
-                  ? (() => {
-                      const n = parseInt(String(value), 10);
-                      return Number.isFinite(n) ? n : 1;
-                    })()
+                    const n = parseInt(String(value), 10);
+                    return Number.isFinite(n) ? n : 1;
+                  })()
                   : value,
-            }
+          }
           : item
       )
     );
   };
 
   const handleRemove = (id: number) => {
-    // prevent removing the last remaining row
     setItems((prev) => {
       if (prev.length <= 1) return prev;
       return prev.filter((i) => i.id !== id);
     });
   };
 
-  // Per-item final calculation: qty * price * (1 + vat/100)
   const itemFinal = (item: {
     qty: number;
     price: number;
@@ -408,88 +202,15 @@ export default function CreateBillPage() {
 
   const total = items.reduce((sum, i) => sum + itemFinal(i), 0);
 
-  const disableDelete = items.length === 1; // true when only one row exists
+  const disableDelete = items.length === 1;
 
   const hasSelectedItem = items.some((i) => String(i.name || "").trim() !== "");
   const saveDisabled = !hasSelectedItem;
 
   const handleSaveInvoice = () => {
-    if (saveDisabled) return; // guard
-    const invoice = {
-      customer: selectedCustomer,
-      invoiceNo,
-      invoiceDate,
-      supplyDate,
-      items,
-      total,
-    };
-    console.log("Save invoice:", invoice);
+    if (saveDisabled) return;
     alert("Invoice saved (mock). Check console for payload.");
   };
-
-  function ItemSelect({
-    value,
-    onValueChange,
-    products,
-    loading,
-  }: {
-    value: string;
-    onValueChange: (v: string) => void;
-    products: ProductFromApi[];
-    loading: boolean;
-  }) {
-    const [query, setQuery] = useState("");
-    const lower = query.trim().toLowerCase();
-
-    const filtered =
-      lower === ""
-        ? products
-        : products.filter((p) => String(p.name).toLowerCase().includes(lower));
-
-    return (
-      <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger className="w-full">
-          <SelectValue
-            placeholder={loading ? "Loading items..." : "Select item"}
-          />
-        </SelectTrigger>
-
-        <SelectContent>
-          {/* Search input inside dropdown — doesn't alter outer UI */}
-          <div className="px-3 py-2">
-            <Input
-              placeholder={loading ? "Loading..." : "Search items..."}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full"
-              disabled={loading}
-            />
-          </div>
-
-          {/* loading / empty / list */}
-          {loading ? (
-            <div className="px-3 py-2 text-sm text-gray-500">
-              Loading products…
-            </div>
-          ) : products.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-gray-500">
-              {productsError ? `Failed to load products` : "No products available"}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-gray-500">
-              No items match {query}
-            </div>
-          ) : (
-            filtered.map((p) => (
-              <SelectItem key={String(p._id ?? p.id ?? p.name)} value={p.name}>
-                {p.name}
-              </SelectItem>
-            ))
-          )}
-        </SelectContent>
-      </Select>
-    );
-  }
 
   return (
     <div className="p-8 mx-auto">
@@ -621,14 +342,14 @@ export default function CreateBillPage() {
                     {/* Item (select full width in first column) */}
                     <td className="px-3 py-2 align-top">
                       <div className="w-full">
-                        {/* Use ItemSelect to provide search inside dropdown */}
                         <ItemSelect
                           value={item.name}
-                          onValueChange={(value) =>
+                          onValueChange={(value: string) =>
                             handleItemChange(item.id, value)
                           }
                           products={productsList}
                           loading={productsLoading}
+                          productsError={productsError}
                         />
 
                         {/* helper line with original + last-sold below the select */}
@@ -653,7 +374,7 @@ export default function CreateBillPage() {
                       <Input
                         type="number"
                         step="0.001" // Allow 3 decimal places
-                        value={String(item.price ?? "")}
+                        value={String(item.price)}
                         onChange={(e) =>
                           handleChange(item.id, "price", e.target.value)
                         }
@@ -707,9 +428,8 @@ export default function CreateBillPage() {
                         }
                       >
                         <Trash2
-                          className={`h-4 w-4 ${
-                            disableDelete ? "text-gray-300" : "text-red-500"
-                          }`}
+                          className={`h-4 w-4 ${disableDelete ? "text-gray-300" : "text-red-500"
+                            }`}
                         />
                       </Button>
                     </td>
@@ -741,11 +461,10 @@ export default function CreateBillPage() {
           Cancel
         </Button>
         <Button
-          className={`px-6 py-2 ${
-            saveDisabled
-              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-              : "bg-purple-600 hover:bg-purple-700 text-white"
-          }`}
+          className={`px-6 py-2 ${saveDisabled
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "bg-purple-600 hover:bg-purple-700 text-white"
+            }`}
           onClick={handleSaveInvoice}
           disabled={saveDisabled}
           aria-disabled={saveDisabled}
