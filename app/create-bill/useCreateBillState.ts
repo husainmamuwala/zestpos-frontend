@@ -335,6 +335,3 @@ export function useCreateBillState() {
         saveError,
     };
 }
-
-// Types for use in the hook and page
-export type { ProductFromApi, Customer, Item };

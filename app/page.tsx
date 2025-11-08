@@ -1,29 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import BillsTable from "./components/BillsTable";
 import ClientAuthGuard from "./components/ClientAuthGuard";
 import Sidebar from "./components/Sidebar";
-import { authApi } from "@/lib/api";
+import InvoiceTable from "./invoice-table/InvoiceTable";
 
 export default function Home() {
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        const res = await authApi.get("/invoice/all");
-        setInvoices(res.data.invoices);
-      } catch (err: any) {
-        console.log(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchInvoices();
-  }, []);
 
   return (
     <div className="antialiased">
@@ -42,7 +24,7 @@ export default function Home() {
               </div>
 
               {/* Loading / Error states */}
-              <BillsTable invoices={invoices} />
+              <InvoiceTable />
             </div>
           </ClientAuthGuard>
         </div>
