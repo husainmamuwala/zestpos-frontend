@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -75,6 +75,11 @@ export default function AddItemsPage() {
   const [editError, setEditError] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState<boolean>(false);
 
+  // Search + pagination
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
+  const PAGE_SIZE = 10;
+
   // Load from localStorage (if present) on mount
   useEffect(() => {
     try {
@@ -115,6 +120,7 @@ export default function AddItemsPage() {
 
         if (mounted) {
           setProducts([...fetchedProducts, ...localTemps]);
+          setPage(1);
         }
       } catch (e) {
         console.warn("Failed to load products from API", e);
@@ -185,6 +191,7 @@ export default function AddItemsPage() {
 
     // optimistic add
     setProducts((prev) => [newItem, ...prev]);
+    setPage(1); // show newest on first page
 
     try {
       const response = await fetch(`${API_BASE_URL}/product/add-product`, {
@@ -252,6 +259,12 @@ export default function AddItemsPage() {
       }
 
       closeDeleteDialog();
+
+      // if current page became empty after deletion, go back a page
+      setTimeout(() => {
+        const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE));
+        if (page > totalPages) setPage(totalPages);
+      }, 0);
     } catch (err: unknown) {
       setProducts(prev);
       setError((err as { message?: string })?.message ?? "An error occurred while deleting the product.");
@@ -333,6 +346,35 @@ export default function AddItemsPage() {
     }
   };
 
+  /* ---------- Search & Pagination logic ---------- */
+  // filtered list based on searchQuery
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter((p) => p.name.toLowerCase().includes(q));
+  }, [products, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE));
+
+  // ensure page is within bounds when filteredProducts changes
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [totalPages, page]);
+
+  // current page slice
+  const pageStart = (page - 1) * PAGE_SIZE;
+  const pageSlice = filteredProducts.slice(pageStart, pageStart + PAGE_SIZE);
+
+  const handleSearchChange = (v: string) => {
+    setSearchQuery(v);
+    setPage(1);
+  };
+
+  const gotoPage = (n: number) => {
+    const pg = Math.min(Math.max(1, n), totalPages);
+    setPage(pg);
+  };
+
   /* ---------- Render ---------- */
   return (
     <div className="p-10 mx-auto">
@@ -342,8 +384,16 @@ export default function AddItemsPage() {
           <p className="text-sm text-gray-600">Create products used in billing.</p>
         </div>
 
-        {/* Add product button -> opens modal */}
+        {/* Right-side controls: search + add product button */}
         <div className="flex items-center gap-3">
+          <div className="w-64">
+            <Input
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+            />
+          </div>
+
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-purple-600 hover:bg-purple-700 text-white">
@@ -395,50 +445,119 @@ export default function AddItemsPage() {
         {products.length === 0 ? (
           <div className="text-sm text-gray-500">No products added yet.</div>
         ) : (
-          <div className="overflow-x-auto bg-white rounded-md shadow-sm">
-            <table className="w-full text-[14px]">
-              <thead className="bg-gray-50 text-gray-700">
-                <tr>
-                  <th className="px-4 py-2 text-left">Name</th>
-                  <th className="px-4 py-2 text-left">Price (OMR)</th>
-                  <th className="px-4 py-2 text-left">VAT %</th>
-                  <th className="px-4 py-2 text-left">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {products.map((p) => (
-                  <tr key={p._id} className="border-b last:border-b-0 hover:bg-gray-50">
-                    <td className="px-4 py-3">{p.name}</td>
-                    <td className="px-4 py-3">OMR {Number(p.price).toFixed(3)}</td>
-                    <td className="px-4 py-3">{p.vat}%</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditDialog(p._id)}
-                          title="Edit"
-                          className="inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100"
-                        >
-                          <Edit2 className="h-4 w-4 text-indigo-600" /> <span className="text-sm">Edit</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => openDeleteDialog(p._id)}
-                          title="Delete"
-                          className="inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-red-100"
-                          disabled={isDeleting}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" /> <span className="text-sm">Delete</span>
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="overflow-x-auto bg-white rounded-md shadow-sm">
+              <table className="w-full text-[14px]">
+                <thead className="bg-gray-50 text-gray-700">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Name</th>
+                    <th className="px-4 py-2 text-left">Price (OMR)</th>
+                    <th className="px-4 py-2 text-left">VAT %</th>
+                    <th className="px-4 py-2 text-left">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {pageSlice.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500">
+                        No products match your search.
+                      </td>
+                    </tr>
+                  ) : (
+                    pageSlice.map((p) => (
+                      <tr key={p._id} className="border-b last:border-b-0 hover:bg-gray-50">
+                        <td className="px-4 py-3">{p.name}</td>
+                        <td className="px-4 py-3">OMR {Number(p.price).toFixed(3)}</td>
+                        <td className="px-4 py-3">{p.vat}%</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openEditDialog(p._id)}
+                              title="Edit"
+                              className="inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100"
+                            >
+                              <Edit2 className="h-4 w-4 text-indigo-600" /> <span className="text-sm">Edit</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => openDeleteDialog(p._id)}
+                              title="Delete"
+                              className="inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-red-100"
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" /> <span className="text-sm">Delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination controls */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-600">
+                Showing <strong>{Math.min(pageStart + 1, filteredProducts.length || 0)}</strong> to{" "}
+                <strong>{Math.min(pageStart + PAGE_SIZE, filteredProducts.length)}</strong> of{" "}
+                <strong>{filteredProducts.length}</strong> products
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => gotoPage(page - 1)}
+                  disabled={page <= 1}
+                >
+                  Prev
+                </Button>
+
+                {/* show a small range of pages around current page */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((pNum) => {
+                      // show only pages near current to avoid huge list: current +-2, first and last
+                      if (totalPages <= 7) return true;
+                      if (pNum === 1 || pNum === totalPages) return true;
+                      if (Math.abs(pNum - page) <= 2) return true;
+                      return false;
+                    })
+                    .map((pNum, idx, arr) => {
+                      const isGap =
+                        idx > 0 && arr[idx - 1] + 1 !== pNum; // detect gap to show ellipsis
+                      return (
+                        <React.Fragment key={pNum}>
+                          {isGap && <span className="px-2">…</span>}
+                          <Button
+                            size="sm"
+                            variant={pNum === page ? undefined : "outline"}
+                            onClick={() => gotoPage(pNum)}
+                            aria-current={pNum === page ? "page" : undefined}
+                            className={pNum === page ? "bg-gray-100" : ""}
+                          >
+                            {pNum}
+                          </Button>
+                        </React.Fragment>
+                      );
+                    })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => gotoPage(page + 1)}
+                  disabled={page >= totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </section>
 

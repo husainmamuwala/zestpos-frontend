@@ -46,7 +46,7 @@ export function useCreateBillState() {
                 id: Date.now(),
                 name: "",
                 price: 0,
-                qty: 1,
+                qty: 0,
                 vat: 5,
             },
         ]
@@ -157,7 +157,7 @@ export function useCreateBillState() {
                     id: Date.now() + Math.floor(Math.random() * 1000),
                     name: "",
                     price: 0,
-                    qty: 1,
+                    qty: 0,
                     vat: 5,
                 },
             ];
@@ -199,7 +199,7 @@ export function useCreateBillState() {
                                   : field === "qty"
                                   ? (() => {
                                         const n = parseInt(String(value), 10);
-                                        return Number.isFinite(n) ? n : 1;
+                                        return Number.isFinite(n) ? n : 0;
                                     })()
                                   : value,
                       }
