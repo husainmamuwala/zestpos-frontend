@@ -24,17 +24,11 @@ export function useInvoice() {
         }
     };
 
-    const handleDownload = (invoice: Invoice) => {
+    const handleDownload = (invoice: Invoice) => {        
         const doc = new jsPDF();
 
-        // 🔹 Add Header Image
-        // Make sure your image is base64-encoded or imported as a data URL
-        // Example: import headerImg from "@/assets/header.png";
         const headerHeight = 25;
-        doc.addImage('/SCP Letterhead - Top.png', 'PNG', 0, 0, 210, headerHeight); // (x, y, width, height)
-        // Adjust width=210 for A4 width 
-
-        // Add some top margin so text doesn’t overlap header
+        doc.addImage('/SCP Letterhead - Top.png', 'PNG', 0, 0, 210, headerHeight); 
         let currentY = headerHeight + 10;
 
         // Title
