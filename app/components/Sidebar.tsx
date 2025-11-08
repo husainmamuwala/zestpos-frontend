@@ -30,7 +30,6 @@ export default function Sidebar() {
     const ok = confirm("Are you sure you want to log out?");
     if (!ok) return;
     localStorage.removeItem("zestpos_token");
-    localStorage.removeItem("zestpos_user");
     router.push("/login");
     setLoggingOut(false);
   };

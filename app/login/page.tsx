@@ -63,7 +63,6 @@ export default function LoginPage() {
       }).then(res => res.data);
       try {
         localStorage.setItem("zestpos_token", result.token);
-        localStorage.setItem("zestpos_user", JSON.stringify(result.user));
         if (remember) {
           localStorage.setItem("zestpos_remembered_email", email.trim());
         } else {

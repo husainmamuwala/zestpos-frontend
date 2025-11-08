@@ -2,30 +2,40 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { authApi } from "@/lib/api";
+import toast from "react-hot-toast";
 
 export default function ClientAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [checked, setChecked] = useState(false);
+
+  const validateToken = async (token: string | null) => {
+    try {
+      const res = await authApi.get("/invoice/all");
+      console.log("response", res);
+
+      if (res.data.status !== "success" || !token) {
+        localStorage.removeItem("zestpos_token");
+        router.replace(`/login`);
+      }
+    }
+    catch (err) {
+      console.log("error", err);
+      localStorage.removeItem("zestpos_token");
+      router.replace(`/login`);
+      toast.error("Session expired. Please log in again.");
+    }
+  }
 
   useEffect(() => {
     try {
       const token = localStorage.getItem("zestpos_token");
-      if (!token) {
-        // if already on /login or /forgot-password, do not redirect
-        if (pathname && !pathname.startsWith("/login") && !pathname.startsWith("/forgot-password")) {
-          router.replace(`/login?next=${encodeURIComponent(pathname ?? "/")}`);
-          return; // Just return here, no JSX
-        }
-      }
-    } catch (e) {
-      // ignore localStorage errors
-    } finally {
-      setChecked(true);
+      validateToken(token);
+    } catch (err) {
+      console.log("error", err);
+      router.replace(`/login`);
     }
   }, [router, pathname]);
 
-  // Wait until we've checked localStorage to avoid flicker
-  if (!checked) return;
   return <>{children}</>;
 }
