@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { FilePlus2, PackagePlus, FileText, LogOut, Users2 } from "lucide-react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 const navItems = [
   { name: "Create Invoice", href: "/create-bill", icon: FilePlus2 },
@@ -28,9 +29,10 @@ export default function Sidebar() {
   const handleLogout = async () => {
     setLoggingOut(true);
     const ok = confirm("Are you sure you want to log out?");
-    if (!ok) return;
+    if (!ok) { setLoggingOut(false); return };
     localStorage.removeItem("zestpos_token");
     router.push("/login");
+    toast.success("Logged out successfully.");
     setLoggingOut(false);
   };
 

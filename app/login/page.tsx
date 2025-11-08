@@ -6,28 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { publicApi } from "@/lib/api";
+import toast from "react-hot-toast";
+import Loader from "@/utils/loader";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [remember, setRemember] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      const remembered = localStorage.getItem("zestpos_remembered_email");
-      if (remembered) {
-        setEmail(remembered);
-        setRemember(true);
-      }
-    } catch (e) {
-
-    }
-  }, []);
 
   const validate = () => {
     if (!email.trim()) {
@@ -63,26 +52,29 @@ export default function LoginPage() {
       }).then(res => res.data);
       try {
         localStorage.setItem("zestpos_token", result.token);
-        if (remember) {
-          localStorage.setItem("zestpos_remembered_email", email.trim());
-        } else {
-          localStorage.removeItem("zestpos_remembered_email");
-        }
       } catch (err) {
         console.warn("localStorage write failed", err);
       }
       router.push("/");
+      toast.success("Logged in successfully.");
     } catch (err: unknown) {
       setError((err as Error)?.message ?? "Login failed. Try again.");
       setLoading(false);
     }
+    finally {
+      setLoading(false);
+    }
   };
 
+  if (loading) {
+    return (<Loader />)
+  }
+
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[var(--background)] p-6">
+    <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="mb-6">
-          <img src="/tali-logo.svg" alt="ZestPOS" className="h-14 mx-auto" />
+          <img src="/zestposlogo.png" alt="ZestPOS" className="h-14 mx-auto" />
           <h1 className="text-2xl font-semibold text-gray-900 text-center mt-4">Sign in to ZestPOS</h1>
           <p className="text-sm text-gray-600 text-center mt-1">Enter your credentials to continue</p>
         </div>
@@ -137,17 +129,7 @@ export default function LoginPage() {
           </div>
 
           {/* Remember & forgot */}
-          <div className="flex items-center justify-between mb-4">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300"
-              />
-              <span>Remember me</span>
-            </label>
-
+          <div className="flex justify-end mb-4">
             <a
               href="/forgot-password"
               className="text-sm text-indigo-600 hover:underline"
@@ -171,7 +153,7 @@ export default function LoginPage() {
           <div className="flex flex-col gap-3">
             <Button
               type="submit"
-              className={`w-full flex justify-center items-center py-2 ${loading ? "opacity-80 cursor-wait" : "hover:bg-purple-700"
+              className={`w-full cursor-pointer flex justify-center items-center py-2 ${loading ? "opacity-80 cursor-wait" : "hover:bg-purple-700"
                 } bg-purple-600 text-white`}
               disabled={loading}
               aria-disabled={loading}

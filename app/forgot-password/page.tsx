@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -101,17 +101,17 @@ export default function ForgotPasswordPage() {
           <div className="flex flex-col gap-3 mt-10">
             <Button
               type="submit"
-              className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white"
+              className="w-full cursor-pointer py-2 bg-purple-600 hover:bg-purple-700 text-white"
               disabled={loading}
             >
               {loading ? "Sending..." : "Send reset link"}
-            </Button>
+            </Button> 
 
             <Button
               type="button"
               variant="outline"
               onClick={() => router.push("/login")}
-              className="w-full"
+              className="w-full cursor-pointer"
             >
               Back to sign in
             </Button>

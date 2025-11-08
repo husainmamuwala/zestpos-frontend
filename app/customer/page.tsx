@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
 import AddCustomerDialog from "./AddCustomerDialog";
+import Loader from "@/utils/loader";
+import { authApi } from "@/lib/api";
 
-type Customer = {
+interface Customer {
   _id?: string;
   id?: string | number;
   name: string;
@@ -18,16 +17,13 @@ type Customer = {
   createdAt?: string;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
-
-  // form state (match your schema)
   const [name, setName] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
@@ -40,56 +36,22 @@ export default function CustomersPage() {
 
   // Fetch customers on mount
   useEffect(() => {
-    let mounted = true;
     const fetchCustomers = async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE_URL}/customer/customers`);
-        if (!res.ok) {
-          // try to extract message safely
-          let msg = `Failed to fetch customers (${res.status})`;
-          try {
-            const json = (await res.json()) as unknown;
-            if (json && typeof json === "object" && "message" in (json as Record<string, unknown>)) {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-              msg = String((json as Record<string, unknown>).message ?? msg);
-            }
-          } catch {
-            // ignore
-          }
-          throw new Error(msg);
-        }
-
-        const payload = (await res.json()) as unknown;
-
-        if (Array.isArray(payload)) {
-          if (!mounted) return;
-          setCustomers(payload.map(normalizeCustomer));
-        } else if (payload && typeof payload === "object" && "customers" in payload) {
-          const arr = (payload as Record<string, unknown>).customers;
-          if (Array.isArray(arr)) {
-            if (!mounted) return;
-            setCustomers(arr.map(normalizeCustomer));
-          } else {
-            throw new Error("Invalid customers response shape");
-          }
-        } else {
-          throw new Error("Invalid customers response shape");
-        }
+        const res = await authApi.get(`${API_BASE_URL}/customer/customers`)
+        setCustomers(res.data.customers)
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        if (mounted) setError(msg);
         console.warn("Failed to load customers:", msg);
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     };
 
     fetchCustomers();
-    return () => {
-      mounted = false;
-    };
+
   }, []);
 
   // normalize unknown payload to Customer shape (no `any`)
@@ -100,10 +62,10 @@ export default function CustomersPage() {
       typeof obj._id === "string"
         ? obj._id
         : typeof obj.id === "string"
-        ? obj.id
-        : typeof obj.id === "number"
-        ? String(obj.id)
-        : undefined;
+          ? obj.id
+          : typeof obj.id === "number"
+            ? String(obj.id)
+            : undefined;
 
     const nameVal = typeof obj.name === "string" ? obj.name : "";
     const addressVal = typeof obj.address === "string" ? obj.address : "";
@@ -240,6 +202,10 @@ export default function CustomersPage() {
     }
   };
 
+  if (loading) {
+    return (<Loader />)
+  }
+
   return (
     <div className="p-8 mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -294,13 +260,7 @@ export default function CustomersPage() {
             </thead>
 
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500">
-                    Loading…
-                  </td>
-                </tr>
-              ) : customers.length === 0 ? (
+              {customers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500">
                     No customers found.
