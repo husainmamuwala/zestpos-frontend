@@ -35,7 +35,7 @@ export default function InvoiceTable() {
                             <td className="px-4 py-2">{formatDate(invoice.invoiceDate)}</td>
                             <td className="px-4 py-2">
                                 <Button
-                                    className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1"
+                                    className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white flex items-center gap-1"
                                     onClick={() => handleDownload(invoice)}
                                 >
                                     <Download className="w-4 h-4" /> Download
