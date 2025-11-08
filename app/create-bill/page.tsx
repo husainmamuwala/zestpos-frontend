@@ -221,7 +221,7 @@ export default function CreateBillPage() {
 
             <div>
               <Button
-                className={`px-6 py-2 ${saveDisabled ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 text-white"}`}
+                className={`px-6 py-2 ${saveDisabled ? "bg-gray-200 text-gray-400" : "bg-purple-600 hover:bg-purple-700 text-white cursor-pointer"}`}
                 onClick={handleSaveInvoice}
                 disabled={saveDisabled}
                 aria-disabled={saveDisabled}

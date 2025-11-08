@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { authApi } from "@/lib/api";
 import toast from "react-hot-toast";
 import { ProductFromApi, Customer, Item } from "./types";
+import { useInvoice } from "../invoice-table/useInvoice";
 
 const STORAGE_KEY = "zestpos_create_bill_state";
 
@@ -27,6 +28,7 @@ const loadStateFromStorage = (): Partial<StoredState> => {
 
 export function useCreateBillState() {
     const savedState = loadStateFromStorage();
+    const { handleDownload } = useInvoice();
     const [customer, setCustomer] = useState<string | null>(savedState.customer ?? null);
     const [invoiceDate, setInvoiceDate] = useState(savedState.invoiceDate ?? "");
     const [supplyDate, setSupplyDate] = useState(savedState.supplyDate ?? "");
@@ -172,11 +174,11 @@ export function useCreateBillState() {
             const newItems = prev.map((item) =>
                 item.id === id
                     ? {
-                          ...item,
-                          name,
-                          price: foundApi?.price ?? 0,
-                          vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
-                      }
+                        ...item,
+                        name,
+                        price: foundApi?.price ?? 0,
+                        vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
+                    }
                     : item
             );
             saveStateToStorage({ items: newItems });
@@ -189,20 +191,20 @@ export function useCreateBillState() {
             const newItems = prev.map((item) =>
                 item.id === id
                     ? {
-                          ...item,
-                          [field]:
-                              field === "price" || field === "vat"
-                                  ? (() => {
-                                        const n = Number(value);
-                                        return Number.isFinite(n) ? n : 0;
-                                    })()
-                                  : field === "qty"
-                                  ? (() => {
+                        ...item,
+                        [field]:
+                            field === "price" || field === "vat"
+                                ? (() => {
+                                    const n = Number(value);
+                                    return Number.isFinite(n) ? n : 0;
+                                })()
+                                : field === "qty"
+                                    ? (() => {
                                         const n = parseInt(String(value), 10);
                                         return Number.isFinite(n) ? n : 0;
                                     })()
-                                  : value,
-                      }
+                                    : value,
+                    }
                     : item
             );
             saveStateToStorage({ items: newItems });
@@ -252,6 +254,10 @@ export function useCreateBillState() {
 
             // Use authApi which has baseURL set and attaches token if present
             const res = await authApi.post(`/invoice/create`, payload);
+            if (res.data.invoice) {
+                handleDownload(res.data.invoice);
+                toast.success("Invoice PDF downloaded successfully");
+            }
 
             // On success, clear persisted state and reset local state
             try {
