@@ -24,11 +24,11 @@ export function useInvoice() {
         }
     };
 
-    const handleDownload = (invoice: Invoice) => {        
+    const handleDownload = (invoice: Invoice) => {
         const doc = new jsPDF();
 
         const headerHeight = 25;
-        doc.addImage('/SCP Letterhead - Top.png', 'PNG', 0, 0, 210, headerHeight); 
+        doc.addImage('/SCP Letterhead - Top.png', 'PNG', 0, 0, 210, headerHeight);
         let currentY = headerHeight + 10;
 
         // Title
@@ -56,8 +56,10 @@ export function useInvoice() {
         currentY += 8;
         doc.text(`Phone: ${invoice.customer.phone}`, 14, currentY);
         currentY += 8;
-        doc.text(`Email: ${invoice.customer.email}`, 14, currentY);
-        currentY += 13;
+        if (invoice.customer.email) {
+            doc.text(`Email: ${invoice.customer.email}`, 14, currentY);
+            currentY += 13;
+        }
 
         // Items Table
         const itemRows = invoice.items.map((item, index) => [
