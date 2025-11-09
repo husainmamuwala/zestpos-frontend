@@ -54,39 +54,6 @@ export default function CustomersPage() {
 
   }, []);
 
-  // normalize unknown payload to Customer shape (no `any`)
-  function normalizeCustomer(input: unknown): Customer {
-    const obj = (input as Record<string, unknown>) ?? {};
-
-    const _id =
-      typeof obj._id === "string"
-        ? obj._id
-        : typeof obj.id === "string"
-          ? obj.id
-          : typeof obj.id === "number"
-            ? String(obj.id)
-            : undefined;
-
-    const nameVal = typeof obj.name === "string" ? obj.name : "";
-    const addressVal = typeof obj.address === "string" ? obj.address : "";
-    const phoneVal = typeof obj.phone === "string" ? obj.phone : "";
-    const contactPersonNameVal = typeof obj.contactPersonName === "string" ? obj.contactPersonName : "";
-    const emailVal = typeof obj.email === "string" ? obj.email : "";
-    const deliveryaddressVal = typeof obj.deliveryaddress === "string" ? obj.deliveryaddress : "";
-    const createdAtVal = typeof obj.createdAt === "string" ? obj.createdAt : undefined;
-
-    return {
-      _id,
-      name: nameVal,
-      address: addressVal,
-      phone: phoneVal,
-      contactPersonName: contactPersonNameVal,
-      email: emailVal,
-      deliveryaddress: deliveryaddressVal,
-      createdAt: createdAtVal,
-    };
-  }
-
   const closeAddDialog = () => {
     setDialogOpen(false);
   };
@@ -133,70 +100,15 @@ export default function CustomersPage() {
       deliveryaddress: deliveryaddress.trim() || undefined,
     };
 
-    // optimistic UI
-    const tempId = `temp-${Date.now()}`;
-    const optimistic: Customer = {
-      _id: tempId,
-      name: payload.name,
-      address: payload.address,
-      phone: payload.phone,
-      contactPersonName: payload.contactPersonName,
-      email: payload.email,
-      deliveryaddress: payload.deliveryaddress,
-    };
-
-    setCustomers((prev) => [optimistic, ...prev]);
-
     try {
-      const res = await fetch(`${API_BASE_URL}/customer/add-customer`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        // try to get server message
-        let msg = `Failed to add customer (${res.status})`;
-        try {
-          const json = (await res.json()) as unknown;
-          if (json && typeof json === "object" && "message" in (json as Record<string, unknown>)) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            msg = String((json as Record<string, unknown>).message ?? msg);
-          }
-        } catch {
-          // ignore
-        }
-        throw new Error(msg);
-      }
-
-      const created = (await res.json()) as unknown;
-
-      // server may return created object or wrapper { customer: {...} }
-      let createdCustomer: Customer | null = null;
-      if (Array.isArray(created)) {
-        createdCustomer = created.length > 0 ? normalizeCustomer(created[0]) : null;
-      } else if (created && typeof created === "object") {
-        const asObj = created as Record<string, unknown>;
-        if ("customer" in asObj && asObj.customer) {
-          createdCustomer = normalizeCustomer(asObj.customer);
-        } else {
-          createdCustomer = normalizeCustomer(created);
-        }
-      }
-
+      const res = await authApi.post(`${API_BASE_URL}/customer/add-customer`, payload);
+      const createdCustomer = res.data.customer;
       if (createdCustomer) {
-        setCustomers((prev) => prev.map((c) => (c._id === tempId ? createdCustomer! : c)));
+        setCustomers((prev) => [...prev, createdCustomer]);
         setDialogOpen(false);
-      } else {
-        // rollback
-        setCustomers((prev) => prev.filter((c) => c._id !== tempId));
-        setFormError("Server returned invalid customer object.");
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setCustomers((prev) => prev.filter((c) => c._id !== tempId));
-      setFormError(msg);
-      console.error("Add customer failed:", msg);
+      console.error("Add customer failed:", err);
     } finally {
       setSaving(false);
     }

@@ -88,10 +88,10 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
         </div>
         {formError && <div className="text-sm text-red-600">{formError}</div>}
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="outline" type="button" onClick={onCancel} disabled={saving}>
+          <Button className="cursor-pointer" variant="outline" type="button" onClick={onCancel} disabled={saving}>
             Cancel
           </Button>
-          <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white" disabled={saving}>
+          <Button type="submit" className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white" disabled={saving}>
             {saving ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
