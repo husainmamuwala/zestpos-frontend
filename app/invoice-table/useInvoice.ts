@@ -17,6 +17,7 @@ export function useInvoice() {
             setInvoices(res.data.invoices);
             setTotalPages(res.data.totalPages);
             setCurrentPage(res.data.currentPage);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             console.log(err);
         } finally {
@@ -27,76 +28,162 @@ export function useInvoice() {
     const handleDownload = (invoice: Invoice) => {
         const doc = new jsPDF();
 
+        const pageWidth = doc.internal.pageSize.getWidth(); // typically 210mm for A4
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const marginX = 14;
         const headerHeight = 25;
-        doc.addImage('/SCP Letterhead - Top.png', 'PNG', 0, 0, 210, headerHeight);
+        const footerHeight = 20;
+
+        // Signature area dimensions we want to reserve below the table
+        const sigBoxWidth = 80;
+        const sigBoxHeight = 10; // box height
+        const sigGapY = 8;        // gap above signatures after table
+        const sigLabelsGap = 6;   // label gap above boxes
+        const sigUnderTextGap = 8;// small name/date line below boxes
+
+        // Reserve some extra height so at least 1-2 rows appear on last page with the signatures.
+        // Increase this if you want more rows guaranteed on last page.
+        const reservedSignatureArea =
+            sigGapY + sigLabelsGap + sigBoxHeight + sigUnderTextGap + 6; // total reserved height
+
+        // Try to add top letterhead image (safe)
+        try {
+            doc.addImage('/SCP Letterhead - Top.png', 'PNG', 0, 0, pageWidth, headerHeight);
+        } catch (e) {
+            // ignore if image not available
+        }
         let currentY = headerHeight + 10;
 
-        // Title
+        // Title centered
         doc.setFontSize(18);
-        doc.text("Invoice", 14, currentY);
+        doc.text("Tax Invoice", pageWidth / 2, currentY, { align: "center" });
         currentY += 10;
 
-        // Invoice Info
-        doc.setFontSize(12);
-        doc.text(`Invoice No: ${invoice.invoiceNumber}`, 14, currentY);
-        currentY += 8;
-        doc.text(`Invoice Date: ${formatDate(invoice.invoiceDate)}`, 14, currentY);
-        currentY += 8;
-        doc.text(`Supply Date: ${formatDate(invoice.supplyDate)}`, 14, currentY);
-        currentY += 12;
+        // Supplier (customer) on the left, invoice meta on the right
+        const leftX = marginX;
+        const rightColWidth = 80; // width allocated for right column
+        const rightX = pageWidth - marginX - rightColWidth;
 
-        // Customer Info
-        doc.setFontSize(14);
-        doc.text("Customer Details", 14, currentY);
-        currentY += 8;
-        doc.setFontSize(12);
-        doc.text(`Name: ${invoice.customer.name}`, 14, currentY);
-        currentY += 8;
-        doc.text(`Address: ${invoice.customer.address}`, 14, currentY);
-        currentY += 8;
-        doc.text(`Phone: ${invoice.customer.phone}`, 14, currentY);
-        currentY += 8;
+        // Supplier / Customer Details (left)
+        doc.setFontSize(11);
+        doc.setFont(undefined, "normal");
+        doc.text("Supplier Details", leftX, currentY);
+        let leftY = currentY + 8;
+        doc.setFontSize(10);
+        doc.text(`Name: ${invoice.customer.name || "-"}`, leftX, leftY);
+        leftY += 7;
+        doc.text(`Address: ${invoice.customer.address || "-"}`, leftX, leftY);
+        leftY += 7;
+        doc.text(`Phone: ${invoice.customer.phone || "-"}`, leftX, leftY);
+        leftY += 7;
         if (invoice.customer.email) {
-            doc.text(`Email: ${invoice.customer.email}`, 14, currentY);
-            currentY += 13;
+            doc.text(`Email: ${invoice.customer.email}`, leftX, leftY);
+            leftY += 7;
         }
+
+        // Invoice meta (right)
+        let rightY = currentY + 8;
+        doc.setFontSize(10);
+        doc.text(`Invoice No: ${invoice.invoiceNumber}`, rightX, rightY);
+        rightY += 7;
+        doc.text(`Invoice Date: ${formatDate(invoice.invoiceDate)}`, rightX, rightY);
+        rightY += 7;
+        doc.text(`Supply Date: ${formatDate(invoice.supplyDate)}`, rightX, rightY);
+        rightY += 7;
+
+        // Move currentY down to max of leftY/rightY + small gap before table
+        currentY = Math.max(leftY, rightY) + 8;
 
         // Items Table
         const itemRows = invoice.items.map((item, index) => [
             index + 1,
             item.itemName,
             item.qty,
-            item.price.toFixed(2),
+            item.price.toFixed(3),
             `${item.vat}%`,
-            item.finalAmount.toFixed(2),
+            item.finalAmount.toFixed(3),
         ]);
 
+        // draw footer on every page
+        const drawFooterOnPage = (docInstance: jsPDF) => {
+            try {
+                docInstance.addImage('/SCP Letterhead - Bottom.png', 'PNG', 0, pageHeight - footerHeight, pageWidth, footerHeight);
+            } catch (e) {
+                // ignore if footer image missing
+            }
+        };
+
+        // Render table with bottom margin reserved for signatures + footer
         autoTable(doc, {
             startY: currentY,
             head: [["#", "Item Name", "Qty", "Price", "VAT", "Total"]],
             body: itemRows,
-            theme: "striped",
+            theme: "grid",
+            styles: { fontSize: 10 },
+            margin: {
+                left: marginX,
+                right: marginX,
+                bottom: footerHeight + reservedSignatureArea
+            },
+            pageBreak: "auto",
+            rowPageBreak: "avoid",
+            didDrawPage: () => {
+                // draw footer on every page
+                drawFooterOnPage(doc);
+            }
         });
 
-        const finalY = (doc as any).lastAutoTable.finalY || currentY;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const finalY = (doc as any).lastAutoTable?.finalY || currentY;
 
-        // Total Amount
-        doc.setFontSize(14);
-        doc.text(`Total Amount: OMR ${invoice.totalAmount.toFixed(2)}`, 14, finalY + 15);
+        // Move to last page explicitly before adding totals/signatures
+        const lastPageIndex = doc.getNumberOfPages();
+        doc.setPage(lastPageIndex);
 
-        // Footer text (above footer image)
+        // Total Amount (below table, left)
+        const totalY = finalY + 12;
+        doc.setFontSize(12);
+        doc.text(`Total Amount: OMR ${invoice.totalAmount.toFixed(3)}`, marginX, totalY);
+
+        // Signature boxes below table (ensure they don't overlap footer)
+        let sigY = totalY + 20;
+
+        // If signature area would overlap footer (shouldn't happen due to margin bottom),
+        // move sigs up so they fit, or add a new page if absolutely necessary.
+        if (sigY + sigBoxHeight + sigUnderTextGap > pageHeight - footerHeight - 10) {
+            // try to move to a new page but ensure some rows remain with signatures:
+            // create a new page only if necessary (autotable should have left reserved space)
+            doc.addPage();
+            // draw footer on the new page as well
+            drawFooterOnPage(doc);
+            sigY = 40; // top area on new page
+        }
+
+        // Positions: left box (Authorised Signatory), right box (Customer Signature)
+        const sigLeftX = marginX;
+        const sigRightX = pageWidth - marginX - sigBoxWidth;
+
+        // Draw rectangles for signature boxes
+        doc.setLineWidth(0.2);
+        doc.rect(sigLeftX, sigY, sigBoxWidth, sigBoxHeight); // Authorised Signatory
+        doc.rect(sigRightX, sigY, sigBoxWidth, sigBoxHeight); // Customer Signature
+
+        // Labels above each box
         doc.setFontSize(10);
-        doc.text("Thank you for your business!", 14, finalY + 30);
+        doc.text("Authorised Signatory", sigLeftX, sigY - 2);
+        doc.text("Customer Signature", sigRightX, sigY - 2);
 
-        // 🔹 Add Footer Image
-        const pageHeight = doc.internal.pageSize.getHeight();
-        const footerHeight = 20;
-        doc.addImage('/SCP Letterhead - Bottom.png', 'PNG', 0, pageHeight - footerHeight, 210, footerHeight);
+        // Put signatory names inside boxes in the bottom-right corner
+        // Prefer explicit invoice fields if present, otherwise fallbacks
+        doc.setFontSize(9);
+        const paddingRight = 4; // small padding from right edge of box
+        const paddingBottom = 3; // small padding from bottom edge of box
+
+        drawFooterOnPage(doc);
 
         // Save PDF
         doc.save(`${invoice.invoiceNumber}.pdf`);
     };
-
 
     const handleNext = async () => {
         if (currentPage < totalPages) {
@@ -113,7 +200,6 @@ export function useInvoice() {
             await fetchInvoices(prevPage, 5);
         }
     };
-
 
     useEffect(() => {
         fetchInvoices();
