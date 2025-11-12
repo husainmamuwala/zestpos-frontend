@@ -9,10 +9,10 @@ export default function Home() {
 
   return (
     <div className="antialiased">
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <div className="w-full">
-          <ClientAuthGuard>
+      <ClientAuthGuard>
+        <div className="flex min-h-screen">
+          <Sidebar />
+          <div className="w-full">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold">All Bills</h1>
@@ -26,9 +26,9 @@ export default function Home() {
               {/* Loading / Error states */}
               <InvoiceTable />
             </div>
-          </ClientAuthGuard>
+          </div>
         </div>
-      </div>
+      </ClientAuthGuard>
     </div>
   );
 }
