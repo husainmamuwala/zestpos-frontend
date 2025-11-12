@@ -66,7 +66,7 @@ export function useInvoice() {
 
         // Supplier / Customer Details (left)
         doc.setFontSize(11);
-        doc.setFont(undefined, "normal");
+        doc.setFont("Helvetica", "normal"); // or any other valid font name
         doc.text("Supplier Details", leftX, currentY);
         let leftY = currentY + 8;
         doc.setFontSize(10);
