@@ -20,6 +20,8 @@ export default function CreateBillPage() {
     setInvoiceDate,
     supplyDate,
     setSupplyDate,
+    manualInvoiceNumber,
+    setmanualInvoiceNumber,
     productsList,
     productsLoading,
     productsError,
@@ -91,6 +93,10 @@ export default function CreateBillPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Supply Date</label>
               <Input type="date" value={supplyDate} onChange={(e) => setSupplyDate(e.target.value)} />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
+              <Input value={manualInvoiceNumber} placeholder="Eg: INV-001" onChange={(e) => setmanualInvoiceNumber(e.target.value)} />
+            </div>
           </div>
 
           <div className="mt-6 border-t border-gray-200" />
@@ -102,7 +108,7 @@ export default function CreateBillPage() {
           <div className="text-sm text-gray-500">Add products and set price / VAT / quantity</div>
         </div>
 
-        <div className="overflow-x-auto px-8">
+        <div className="overflow-x-auto border-gray-200 border mx-8">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 text-gray-700">
               <tr>

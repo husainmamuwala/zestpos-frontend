@@ -41,6 +41,7 @@ export function useCreateBillState() {
     const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCustomer, setSelectedCustomer] = useState<string>(savedState.selectedCustomer ?? "");
+    const [manualInvoiceNumber, setmanualInvoiceNumber] = useState<string>("");
 
     const [items, setItems] = useState<Item[]>(
         savedState.items ?? [
@@ -315,6 +316,8 @@ export function useCreateBillState() {
         setInvoiceDate,
         supplyDate,
         setSupplyDate,
+        manualInvoiceNumber,
+        setmanualInvoiceNumber,
         productsList,
         productsLoading,
         productsError,
