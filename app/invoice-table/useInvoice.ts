@@ -47,6 +47,9 @@ export function useInvoice() {
       sigGapY + sigLabelsGap + sigBoxHeight + sigUnderTextGap + 6; // total reserved height
 
     // Try to add top letterhead image (safe)
+    let currentY = headerHeight + 10;
+    currentY +=10;
+
     try {
       doc.addImage(
         "/SCP Letterhead - Top.png",
@@ -58,7 +61,7 @@ export function useInvoice() {
       );
     } catch (e) {
     }
-    let currentY = headerHeight + 10;
+   
 
     // Title centered
     doc.setFontSize(18);
@@ -138,7 +141,7 @@ export function useInvoice() {
       startY: currentY,
       head: [["#", "Item Name", "Qty", "Price", "VAT", "Total"]],
       body: itemRows,
-      theme: "grid",
+      theme: "striped",
       styles: { fontSize: 10 },
       margin: {
         left: marginX,

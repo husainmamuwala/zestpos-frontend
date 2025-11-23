@@ -160,7 +160,7 @@ export default function CreateBillPage() {
                     <td className="px-3 py-2 align-top">
                       <Input
                         type="number"
-                        min={0}
+                        min={1}
                         value={String(item.qty ?? "")}
                         onChange={(e) =>
                           handleChange(item.id, "qty", e.target.value)
@@ -181,7 +181,7 @@ export default function CreateBillPage() {
                     </td>
 
                     {/* Final Amount */}
-                    <td className="px-3 py-2 align-top font-medium">₹{itemFinal(item).toFixed(2)}</td>
+                    <td className="px-3 py-2 align-top font-medium">{itemFinal(item).toFixed(3)}</td>
 
                     {/* Remove */}
                     <td className="px-3 py-2 align-top">
@@ -221,30 +221,31 @@ export default function CreateBillPage() {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="text-lg font-semibold">
-              Item Total:   <span className="text-purple-700">
-                ₹{(total - items.reduce((sum, item) => {
+            <div className="text-md font-medium">
+              <span className="text-[#666]">Item Total:</span>   <span className="text-[#222]">
+                OMR {(total - items.reduce((sum, item) => {
                   const price = Number(item.price) || 0;
                   const qty = Number(item.qty) || 0;
                   const vat = Number(item.vat) || 0;
                   const vatAmount = (price * qty * vat) / 100;
                   return sum + vatAmount;
-                }, 0)).toFixed(2)}
+                }, 0)).toFixed(3)}
               </span>
             </div>
-            <div className="text-lg font-semibold">
-              VAT :    <span className="text-purple-700">
-                ₹{items.reduce((sum, item) => {
+            <div className="text-md font-medium">
+            <span className="text-[#666]">VAT :</span>
+            <span className="text-[#222]">
+                OMR {items.reduce((sum, item) => {
                   const price = Number(item.price) || 0;
                   const qty = Number(item.qty) || 0;
                   const vat = Number(item.vat) || 0;
                   const vatAmount = (price * qty * vat) / 100;
                   return sum + vatAmount;
-                }, 0).toFixed(2)}
+                }, 0).toFixed(3)}
               </span>
             </div>
-            <div className="text-lg font-semibold">
-              Final: <span className="text-purple-700">₹{total.toFixed(2)}</span>
+            <div className="text-md font-semibold">
+              Final: <span className="text-purple-700">OMR {total.toFixed(3)}</span>
             </div>
 
             <div>
@@ -255,7 +256,7 @@ export default function CreateBillPage() {
                 aria-disabled={saveDisabled}
                 title={saveDisabled ? "Select at least one item to enable Save" : "Save invoice"}
               >
-                Save Invoice
+                Download Invoice
               </Button>
             </div>
           </div>

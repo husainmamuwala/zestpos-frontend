@@ -122,8 +122,8 @@ export default function CustomersPage() {
     <div className="p-8 mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Account Ledgers</h1>
-          <p className="text-sm text-gray-600">Add new account ledger and view existing ones.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Suppliers List</h1>
+          <p className="text-sm text-gray-600">Add new suppliers account and view existing ones.</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -153,7 +153,7 @@ export default function CustomersPage() {
       <section className="bg-white rounded-md shadow-sm overflow-hidden">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">{loading ? "Loading customers..." : `${customers.length} customers`}</div>
+            <div className="text-sm text-gray-600">{loading ? "Loading customers..." : `${customers.length} Suppliers`}</div>
             <div>{error && <div className="text-sm text-red-600">{error}</div>}</div>
           </div>
         </div>

@@ -15,8 +15,9 @@ export default function InvoiceTable() {
     }
 
     return (
-        <div className="bg-white shadow-md rounded-lg p-4">
-            <table className="min-w-full text-sm">
+        <div className="bg-white shadow-md rounded-lg">
+            <div className="">
+            <table className="min-w-full text-sm rounded-lg">
                 <thead className="bg-gray-100">
                     <tr>
                         <th className="px-4 py-2 text-left">Bill ID</th>
@@ -28,26 +29,27 @@ export default function InvoiceTable() {
                 </thead>
                 <tbody>
                     {invoices.map((invoice) => (
-                        <tr key={invoice._id} className="border-b hover:bg-gray-50">
+                        <tr key={invoice._id} className="border-b hover:bg-gray-50 h-14">
                             <td className="px-4 py-2">{invoice._id}</td>
                             <td className="px-4 py-2">{invoice.customer?.name || "N/A"}</td>
                             <td className="px-4 py-2">{invoice.totalAmount?.toFixed(2)}</td>
                             <td className="px-4 py-2">{formatDate(invoice.invoiceDate)}</td>
                             <td className="px-4 py-2">
-                                <Button
-                                    className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white flex items-center gap-1"
+                                <button
+                                    className="cursor-pointer text-[#9811fa] flex items-center gap-1 hover:bg-[#9811fa]/10 px-4 h-10 rounded-lg"
                                     onClick={() => { handleDownload(invoice, "Tax Invoice"); handleDownload(invoice, "Delivery Order"); }}
                                 >
                                     <Download className="w-4 h-4" /> Download
-                                </Button>
+                                </button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+            </div>
 
             {/* Pagination controls */}
-            <div className="flex justify-end items-center mt-4 gap-2">
+            <div className="flex justify-end items-center gap-2 p-4">
                 <Button
                     className="cursor-pointer"
                     variant="outline"

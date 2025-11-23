@@ -6,7 +6,6 @@ import Sidebar from "./components/Sidebar";
 import InvoiceTable from "./invoice-table/InvoiceTable";
 
 export default function Home() {
-
   return (
     <div className="antialiased">
       <ClientAuthGuard>
@@ -22,8 +21,6 @@ export default function Home() {
                   </Button>
                 </Link>
               </div>
-
-              {/* Loading / Error states */}
               <InvoiceTable />
             </div>
           </div>
