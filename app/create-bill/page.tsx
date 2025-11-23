@@ -154,8 +154,8 @@ export default function CreateBillPage() {
                     <td className="px-3 py-2 align-top">
                       <Input
                         type="number"
-                        step="0.001"
-                        value={String(item.qty)}
+                        min={0}
+                        value={String(item.qty ?? "")}
                         onChange={(e) =>
                           handleChange(item.id, "qty", e.target.value)
                         }

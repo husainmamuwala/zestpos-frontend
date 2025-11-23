@@ -25,7 +25,7 @@ export function useInvoice() {
         }
     };
 
-    const handleDownload = (invoice: Invoice) => {
+    const handleDownload = (invoice: Invoice, title: string) => {
         const doc = new jsPDF();
 
         const pageWidth = doc.internal.pageSize.getWidth(); // typically 210mm for A4
@@ -56,7 +56,7 @@ export function useInvoice() {
 
         // Title centered
         doc.setFontSize(18);
-        doc.text("Tax Invoice", pageWidth / 2, currentY, { align: "center" });
+        doc.text(title, pageWidth / 2, currentY, { align: "center" });
         currentY += 10;
 
         // Supplier (customer) on the left, invoice meta on the right
@@ -182,7 +182,7 @@ export function useInvoice() {
         drawFooterOnPage(doc);
 
         // Save PDF
-        doc.save(`${invoice.invoiceNumber}.pdf`);
+        doc.save(`${title}.pdf`);
     };
 
     const handleNext = async () => {
