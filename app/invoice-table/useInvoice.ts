@@ -36,7 +36,7 @@ export function useInvoice() {
 
     // Signature area dimensions we want to reserve below the table
     const sigBoxWidth = 80;
-    const sigBoxHeight = 10; // box height
+    const sigBoxHeight = 15; // box height
     const sigGapY = 8; // gap above signatures after table
     const sigLabelsGap = 6; // label gap above boxes
     const sigUnderTextGap = 8; // small name/date line below boxes
@@ -57,7 +57,6 @@ export function useInvoice() {
         headerHeight
       );
     } catch (e) {
-      // ignore if image not available
     }
     let currentY = headerHeight + 10;
 
@@ -76,6 +75,7 @@ export function useInvoice() {
     doc.setFont("Helvetica", "normal"); // or any other valid font name
     doc.text("Supplier Details", leftX, currentY);
     let leftY = currentY + 8;
+    doc.setFont("Helvetica", "normal");
     doc.setFontSize(10);
     doc.text(`Name: ${invoice.customer.name || "-"}`, leftX, leftY);
     leftY += 7;

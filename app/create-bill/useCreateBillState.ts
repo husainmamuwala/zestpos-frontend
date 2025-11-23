@@ -244,6 +244,7 @@ export function useCreateBillState() {
             const payload = {
                 customerId: selectedCustomer,
                 invoiceDate: invoiceDate || today,
+                manualInvoiceNumber: manualInvoiceNumber,
                 supplyDate: supplyDate || today,
                 items: items.map((it) => ({
                     itemName: it.name,
