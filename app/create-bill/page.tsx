@@ -222,7 +222,29 @@ export default function CreateBillPage() {
 
           <div className="flex items-center gap-6">
             <div className="text-lg font-semibold">
-              Total: <span className="text-purple-700">₹{total.toFixed(2)}</span>
+              Item Total:   <span className="text-purple-700">
+                ₹{(total - items.reduce((sum, item) => {
+                  const price = Number(item.price) || 0;
+                  const qty = Number(item.qty) || 0;
+                  const vat = Number(item.vat) || 0;
+                  const vatAmount = (price * qty * vat) / 100;
+                  return sum + vatAmount;
+                }, 0)).toFixed(2)}
+              </span>
+            </div>
+            <div className="text-lg font-semibold">
+              VAT :    <span className="text-purple-700">
+                ₹{items.reduce((sum, item) => {
+                  const price = Number(item.price) || 0;
+                  const qty = Number(item.qty) || 0;
+                  const vat = Number(item.vat) || 0;
+                  const vatAmount = (price * qty * vat) / 100;
+                  return sum + vatAmount;
+                }, 0).toFixed(2)}
+              </span>
+            </div>
+            <div className="text-lg font-semibold">
+              Final: <span className="text-purple-700">₹{total.toFixed(2)}</span>
             </div>
 
             <div>
