@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { authApi } from "@/lib/api";
 import toast from "react-hot-toast";
 import { ProductFromApi, Customer, Item } from "./types";
@@ -43,6 +43,10 @@ export function useCreateBillState() {
     const [selectedCustomer, setSelectedCustomer] = useState<string>(savedState.selectedCustomer ?? "");
     const [manualInvoiceNumber, setmanualInvoiceNumber] = useState<string>("");
 
+    const invoiceDateRef = useRef<HTMLInputElement | null>(null);
+    const supplyDateRef = useRef<HTMLInputElement | null>(null);
+    const invoiceNumberRef = useRef<HTMLInputElement | null>(null);
+
     const [items, setItems] = useState<Item[]>(
         savedState.items ?? [
             {
@@ -50,7 +54,7 @@ export function useCreateBillState() {
                 name: "",
                 price: 0,
                 qty: 0,
-                vat: 5,
+                vat: 0,
             },
         ]
     );
@@ -92,7 +96,7 @@ export function useCreateBillState() {
                         ...item,
                         name: "",
                         price: 0,
-                        vat: 5,
+                        vat: 0,
                     };
                 }
                 return item;
@@ -150,6 +154,9 @@ export function useCreateBillState() {
             selectedCustomer: custId,
             customer: newCustomerName,
         });
+        setTimeout(() => {
+            invoiceDateRef.current?.focus();
+        }, 50);
     };
 
     const handleAddItem = () => {
@@ -161,7 +168,7 @@ export function useCreateBillState() {
                     name: "",
                     price: 0,
                     qty: 0,
-                    vat: 5,
+                    vat: 0,
                 },
             ];
             saveStateToStorage({ items: newItems });
@@ -277,7 +284,7 @@ export function useCreateBillState() {
                     name: "",
                     price: 0,
                     qty: 1,
-                    vat: 5,
+                    vat: 0,
                 },
             ]);
             setSelectedCustomer("");
@@ -344,5 +351,8 @@ export function useCreateBillState() {
         handleSaveInvoice,
         saving,
         saveError,
+        invoiceDateRef,
+        supplyDateRef,
+        invoiceNumberRef,
     };
 }

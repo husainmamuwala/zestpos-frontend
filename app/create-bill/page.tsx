@@ -40,6 +40,9 @@ export default function CreateBillPage() {
     disableDelete,
     saveDisabled,
     handleSaveInvoice,
+    invoiceDateRef,
+    supplyDateRef,
+    invoiceNumberRef,
   } = useCreateBillState();
 
   return (
@@ -86,16 +89,24 @@ export default function CreateBillPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
-              <Input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
+              <Input ref={invoiceDateRef} type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  supplyDateRef.current?.focus();
+                }
+              }} />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Supply Date</label>
-              <Input type="date" value={supplyDate} onChange={(e) => setSupplyDate(e.target.value)} />
+              <Input ref={supplyDateRef} type="date" value={supplyDate} onChange={(e) => setSupplyDate(e.target.value)} onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  invoiceNumberRef.current?.focus();
+                }
+              }} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
-              <Input value={manualInvoiceNumber} placeholder="Eg: INV-001" onChange={(e) => setmanualInvoiceNumber(e.target.value)} />
+              <Input ref={invoiceNumberRef} value={manualInvoiceNumber} placeholder="Eg: INV-001" onChange={(e) => setmanualInvoiceNumber(e.target.value)} />
             </div>
           </div>
 
