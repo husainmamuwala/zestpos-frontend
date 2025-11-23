@@ -62,7 +62,7 @@ useEffect(()=>(
       setNewPassword("");
       setConfirmPassword("");
 
-      router.push("/dashboard");
+      router.push("/login");
     } catch (err: unknown) {
       setError((err as Error).message || "An error occurred. Please try again.");
     } finally {

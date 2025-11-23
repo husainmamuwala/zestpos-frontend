@@ -192,7 +192,7 @@ export default function CreateBillPage() {
                     </td>
 
                     {/* Final Amount */}
-                    <td className="px-3 py-2 align-top font-medium">{itemFinal(item).toFixed(3)}</td>
+                    <td className="px-3 py-2 font-medium">{itemFinal(item).toFixed(3)}</td>
 
                     {/* Remove */}
                     <td className="px-3 py-2 align-top">
