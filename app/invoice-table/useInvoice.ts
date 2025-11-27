@@ -48,7 +48,7 @@ export function useInvoice() {
 
     // Try to add top letterhead image (safe)
     let currentY = headerHeight + 10;
-    currentY +=10;
+    currentY += 10;
 
     try {
       doc.addImage(
@@ -61,7 +61,7 @@ export function useInvoice() {
       );
     } catch (e) {
     }
-   
+
 
     // Title centered
     doc.setFontSize(18);
@@ -111,14 +111,28 @@ export function useInvoice() {
     currentY = Math.max(leftY, rightY) + 8;
 
     // Items Table
-    const itemRows = invoice.items.map((item, index) => [
-      index + 1,
-      item.itemName,
-      item.qty,
-      item.price.toFixed(3),
-      `${item.vat}%`,
-      item.finalAmount.toFixed(3),
-    ]);
+    const itemRows = invoice.items.map((item, index) => {
+      const vatAmount = ((item.price * item.qty) * item.vat) / 100;
+      if (title === "Delivery Order") {
+        return [
+          index + 1,
+          item.itemName,
+          item.qty,
+          item.price.toFixed(3),
+          item.finalAmount.toFixed(3),
+        ];
+      }
+      return [
+        index + 1,
+        item.itemName,
+        item.qty,
+        item.price.toFixed(3),
+        `${item.vat}%`,
+        vatAmount.toFixed(3),
+        item.finalAmount.toFixed(3),
+      ];
+    });
+
 
     // draw footer on every page
     const drawFooterOnPage = (docInstance: jsPDF) => {
@@ -139,7 +153,7 @@ export function useInvoice() {
     // Render table with bottom margin reserved for signatures + footer
     autoTable(doc, {
       startY: currentY,
-      head: [["#", "Item Name", "Qty", "Price", "VAT", "Total"]],
+      head: title === "Delivery Order" ? [["#", "Item Name", "Qty", "Price", "Total"]] : [["#", "Item Name", "Qty", "Price", "VAT", "VAT Amt", "Total"]],
       body: itemRows,
       theme: "striped",
       styles: { fontSize: 10 },
