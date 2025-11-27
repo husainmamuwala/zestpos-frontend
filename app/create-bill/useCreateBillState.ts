@@ -60,6 +60,12 @@ export function useCreateBillState() {
     );
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
+    const cleanupItems = (items: Item[]) => {
+        return items.filter(
+            (it) => String(it.name || "").trim() !== "" || it.qty > 0 || it.price > 0
+        );
+    };
+
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -137,12 +143,19 @@ export function useCreateBillState() {
 
         try {
             const currentState = loadStateFromStorage();
-            const updatedState = { ...currentState, ...newState };
+            let updatedState = { ...currentState, ...newState };
+
+            // ✨ auto-clean items here
+            if (updatedState.items) {
+                updatedState.items = cleanupItems(updatedState.items);
+            }
+
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
         } catch (error) {
             console.error("Error saving state to localStorage:", error);
         }
     };
+
 
     const handleCustomerSelect = (custId: string) => {
         const found = customers.find((c) => c._id === custId);
@@ -161,20 +174,23 @@ export function useCreateBillState() {
 
     const handleAddItem = () => {
         setItems((prev) => {
-            const newItems = [
-                ...prev,
-                {
-                    id: Date.now() + Math.floor(Math.random() * 1000),
-                    name: "",
-                    price: 0,
-                    qty: 0,
-                    vat: 0,
-                },
-            ];
-            saveStateToStorage({ items: newItems });
+            const newItem = {
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                name: "",
+                price: 0,
+                qty: 0,
+                vat: 0,
+            };
+
+            const cleanedPrev = cleanupItems(prev);
+            const newItems = [...cleanedPrev, newItem];
+
+            saveStateToStorage({ items: cleanedPrev }); // ✨ save only valid items
+
             return newItems;
         });
     };
+
 
     const handleItemChange = (id: number, name: string) => {
         const foundApi = productsList.find((i) => i.name.toLowerCase() === name.toLowerCase());
