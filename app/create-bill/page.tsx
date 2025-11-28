@@ -43,6 +43,10 @@ export default function CreateBillPage() {
     invoiceDateRef,
     supplyDateRef,
     invoiceNumberRef,
+    itemNameRefs,
+    itemPriceRefs,
+    itemQtyRefs,
+    itemVatRefs,
   } = useCreateBillState();
 
   return (

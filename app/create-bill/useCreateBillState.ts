@@ -58,6 +58,12 @@ export function useCreateBillState() {
             },
         ]
     );
+    // Dynamic refs for each column of the items table
+    const itemNameRefs = useRef<Record<number, HTMLInputElement | null>>({});
+    const itemPriceRefs = useRef<Record<number, HTMLInputElement | null>>({});
+    const itemQtyRefs = useRef<Record<number, HTMLInputElement | null>>({});
+    const itemVatRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const cleanupItems = (items: Item[]) => {
@@ -208,6 +214,9 @@ export function useCreateBillState() {
             saveStateToStorage({ items: newItems });
             return newItems;
         });
+        setTimeout(() => {
+            itemPriceRefs.current[id]?.focus();
+        }, 50);
     };
 
     const handleChange = (id: number, field: string, value: unknown) => {
@@ -234,6 +243,7 @@ export function useCreateBillState() {
             saveStateToStorage({ items: newItems });
             return newItems;
         });
+        
     };
 
     const handleRemove = (id: number) => {
@@ -370,5 +380,9 @@ export function useCreateBillState() {
         invoiceDateRef,
         supplyDateRef,
         invoiceNumberRef,
+        itemNameRefs,
+        itemPriceRefs,
+        itemQtyRefs,
+        itemVatRefs,
     };
 }

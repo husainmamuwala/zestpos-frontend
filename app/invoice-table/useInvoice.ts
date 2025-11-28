@@ -113,15 +113,6 @@ export function useInvoice() {
     // Items Table
     const itemRows = invoice.items.map((item, index) => {
       const vatAmount = ((item.price * item.qty) * item.vat) / 100;
-      if (title === "Delivery Order") {
-        return [
-          index + 1,
-          item.itemName,
-          item.qty,
-          item.price.toFixed(3),
-          item.finalAmount.toFixed(3),
-        ];
-      }
       return [
         index + 1,
         item.itemName,
@@ -153,7 +144,7 @@ export function useInvoice() {
     // Render table with bottom margin reserved for signatures + footer
     autoTable(doc, {
       startY: currentY,
-      head: title === "Delivery Order" ? [["#", "Item Name", "Qty", "Price", "Total"]] : [["#", "Item Name", "Qty", "Price", "VAT", "VAT Amt", "Total"]],
+      head: [["#", "Item Name", "Qty", "Price", "VAT", "VAT Amt", "Total"]],
       body: itemRows,
       theme: "striped",
       styles: { fontSize: 10 },
