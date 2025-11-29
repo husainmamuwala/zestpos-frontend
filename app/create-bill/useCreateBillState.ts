@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import { useEffect, useRef, useState } from "react";
 import { authApi } from "@/lib/api";
 import toast from "react-hot-toast";

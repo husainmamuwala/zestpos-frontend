@@ -4,10 +4,15 @@ import { Button } from "@/components/ui/button";
 import ClientAuthGuard from "./components/ClientAuthGuard";
 import Sidebar from "./components/Sidebar";
 import InvoiceTable from "./invoice-table/InvoiceTable";
+import Head from "next/head";
 
 export default function Home() {
   return (
     <div className="antialiased">
+      <Head>
+        <title>SCPT</title>
+        <meta name="description" content="SCP Trading" />
+      </Head>
       <ClientAuthGuard>
         <div className="flex min-h-screen">
           <Sidebar />

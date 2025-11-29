@@ -1,7 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-// @ts-ignore
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 // Sidebar is intentionally not included here so pages like /login do not show it.
@@ -17,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZestPOS",
-  description: "ZestPOS billing app",
+  title: "SCPT",
+  description: "SCPT Billing System",
 };
 
 export default function RootLayout({
