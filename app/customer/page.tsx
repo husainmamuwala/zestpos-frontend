@@ -67,12 +67,12 @@ export default function CustomersPage() {
       setFormError("Address is required.");
       return false;
     }
-    if (!phone.trim()) {
-      setFormError("Phone is required.");
-      return false;
-    }
+    // if (!phone.trim()) {
+    //   setFormError("Phone is required.");
+    //   return false;
+    // }
     // basic phone pattern (allow +, spaces, digits)
-    if (!/^[0-9+\-\s()]{6,20}$/.test(phone.trim())) {
+    if (phone && !/^[0-9+\-\s()]{6,20}$/.test(phone.trim())) {
       setFormError("Enter a valid phone number (6–20 digits, may include +, -, spaces).");
       return false;
     }
@@ -94,7 +94,7 @@ export default function CustomersPage() {
     const payload = {
       name: name.trim(),
       address: address.trim(),
-      phone: phone.trim(),
+      phone: phone.trim() || undefined,
       contactPersonName: contactPersonName.trim() || undefined,
       email: email.trim() || undefined,
       deliveryaddress: deliveryaddress.trim() || undefined,
@@ -167,7 +167,7 @@ export default function CustomersPage() {
                 <th className="px-4 py-3 text-left">Email</th>
                 <th className="px-4 py-3 text-left">Address</th>
                 <th className="px-4 py-3 text-left">Contact Person</th>
-                <th className="px-4 py-3 text-left">Created</th>
+                {/* <th className="px-4 py-3 text-left">Created</th> */}
               </tr>
             </thead>
 
@@ -186,7 +186,7 @@ export default function CustomersPage() {
                     <td className="px-4 py-3">{c.email ?? "-"}</td>
                     <td className="px-4 py-3">{c.address ?? "-"}</td>
                     <td className="px-4 py-3">{c.contactPersonName ?? "-"}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{c.createdAt ? new Date(c.createdAt).toLocaleDateString() : "-"}</td>
+                    {/* <td className="px-4 py-3 text-sm text-gray-500">{c.createdAt ? new Date(c.createdAt).toLocaleDateString() : "-"}</td> */}
                   </tr>
                 ))
               )}

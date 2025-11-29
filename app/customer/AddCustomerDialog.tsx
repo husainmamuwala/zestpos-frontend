@@ -71,7 +71,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
           <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Customer address" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone<span className="text-red-600">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +91 98765 43210" />
         </div>
         <div>
