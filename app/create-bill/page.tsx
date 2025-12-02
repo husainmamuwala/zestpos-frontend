@@ -248,7 +248,7 @@ export default function CreateBillPage() {
               </span>
             </div>
             <div className="text-md font-medium">
-            <span className="text-[#666]">VAT :</span>
+            <span className="text-[#666]">VAT: </span>
             <span className="text-[#222]">
                 OMR {items.reduce((sum, item) => {
                   const price = Number(item.price) || 0;

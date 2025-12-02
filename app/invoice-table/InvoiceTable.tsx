@@ -20,7 +20,7 @@ export default function InvoiceTable() {
             <table className="min-w-full text-sm rounded-lg">
                 <thead className="bg-gray-100">
                     <tr>
-                        <th className="px-4 py-2 text-left">Bill ID</th>
+                        <th className="px-4 py-2 text-left">Manual Invoice Number</th>
                         <th className="px-4 py-2 text-left">Customer</th>
                         <th className="px-4 py-2 text-left">Total (OMR)</th>
                         <th className="px-4 py-2 text-left">Invoice Date</th>
@@ -30,8 +30,8 @@ export default function InvoiceTable() {
                 <tbody>
                     {invoices.map((invoice) => (
                         <tr key={invoice._id} className="border-b hover:bg-gray-50 h-14">
-                            <td className="px-4 py-2">{invoice._id}</td>
-                            <td className="px-4 py-2">{invoice.customer?.name || "N/A"}</td>
+                            <td className="px-4 py-2">{invoice.manualInvoiceNumber || "-"}</td>
+                            <td className="px-4 py-2">{invoice.customer?.name || "-"}</td>
                             <td className="px-4 py-2">{invoice.totalAmount?.toFixed(2)}</td>
                             <td className="px-4 py-2">{formatDate(invoice.invoiceDate)}</td>
                             <td className="px-4 py-2">

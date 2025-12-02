@@ -19,6 +19,10 @@ export interface InvoiceItem {
 }
 
 export interface Invoice {
+  taxableValue(taxableValue: any): unknown;
+  totalVat(totalVat: any): unknown;
+  authorisedSignatoryName: any;
+  customerSignatoryName: any;
   _id: string;
   customer: Customer;
   invoiceNumber: string;
