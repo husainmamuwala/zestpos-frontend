@@ -439,14 +439,14 @@ export function useInvoice() {
   const handleNext = async () => {
     if (currentPage < totalPages) {
       setLoading(true);
-      await fetchInvoices(currentPage + 1, 5);
+      await fetchInvoices(currentPage + 1, 10);
     }
   };
 
   const handlePrev = async () => {
     if (currentPage > 1) {
       setLoading(true);
-      await fetchInvoices(currentPage - 1, 5);
+      await fetchInvoices(currentPage - 1, 10);
     }
   };
 
