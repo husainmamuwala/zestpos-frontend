@@ -37,7 +37,7 @@ export default function InvoiceTable() {
                             <td className="px-4 py-2">
                                 <button
                                     className="cursor-pointer text-[#9811fa] flex items-center gap-1 hover:bg-[#9811fa]/10 px-4 h-10 rounded-lg"
-                                    onClick={() => { handleDownload(invoice, "Tax Invoice"); handleDownload(invoice, "Delivery Order"); }}
+                                    onClick={() => { handleDownload(invoice, "TAX INVOICE"); handleDownload(invoice, "DELIVERY ORDER"); }}
                                 >
                                     <Download className="w-4 h-4" /> Download
                                 </button>

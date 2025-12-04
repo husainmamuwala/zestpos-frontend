@@ -291,8 +291,8 @@ export function useCreateBillState() {
             // Use authApi which has baseURL set and attaches token if present
             const res = await authApi.post(`/invoice/create`, payload);
             if (res.data.invoice) {
-                handleDownload(res.data.invoice, "Tax Invoice");
-                handleDownload(res.data.invoice, "Delivery Order");
+                handleDownload(res.data.invoice, "TAX INVOICE");
+                handleDownload(res.data.invoice, "DELIVERY ORDER");
                 toast.success("Invoice PDF downloaded successfully");
             }
 
