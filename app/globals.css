@@ -16,6 +16,7 @@
   --color-success: #16a34a;
   --color-danger: #dc2626;
   --color-warning: #f59e0b;
+  --color-activestate: #F2E2FC;
 
   /* Radii and shadows */
   --radius: 0.625rem;

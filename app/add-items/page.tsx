@@ -396,7 +396,7 @@ export default function AddItemsPage() {
 
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Button className="bg-[#800080] hover:bg-[#660066] text-white">
                 <Plus className="h-4 w-4 mr-2" /> Add Product
               </Button>
             </DialogTrigger>
@@ -429,7 +429,7 @@ export default function AddItemsPage() {
                   <Button variant="outline" type="button" onClick={closeAddDialog} disabled={addSaving}>
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={addSaving}>
+                  <Button type="submit" className="bg-[#800080] hover:bg-[#660066] text-white" disabled={addSaving}>
                     {addSaving ? "Adding..." : "Add"}
                   </Button>
                 </DialogFooter>
@@ -476,16 +476,16 @@ export default function AddItemsPage() {
                               type="button"
                               onClick={() => openEditDialog(p._id)}
                               title="Edit"
-                              className="inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100"
+                              className="inline-flex items-center gap-2 px-3 py-2 rounded hover:bg-[#9811fa]/10"
                             >
-                              <Edit2 className="h-4 w-4 text-indigo-600" /> <span className="text-sm">Edit</span>
+                              <Edit2 className="h-4 w-4 text-[#800080]" /> <span className="text-sm">Edit</span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => openDeleteDialog(p._id)}
                               title="Delete"
-                              className="inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-red-100"
+                              className="inline-flex items-center gap-2 px-3 py-2 rounded hover:bg-red-100"
                               disabled={isDeleting}
                             >
                               <Trash2 className="h-4 w-4 text-red-600" /> <span className="text-sm">Delete</span>
@@ -538,7 +538,7 @@ export default function AddItemsPage() {
                             variant={pNum === page ? undefined : "outline"}
                             onClick={() => gotoPage(pNum)}
                             aria-current={pNum === page ? "page" : undefined}
-                            className={pNum === page ? "bg-gray-100" : ""}
+                            className={pNum === page ? "bg-[#800080]" : ""}
                           >
                             {pNum}
                           </Button>
@@ -591,7 +591,7 @@ export default function AddItemsPage() {
               <Button variant="outline" type="button" onClick={closeEditDialog} disabled={editSaving}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={editSaving}>
+              <Button type="submit" className="bg-[#800080] hover:bg-[#660066] text-white" disabled={editSaving}>
                 {editSaving ? "Updating..." : "Update"}
               </Button>
             </DialogFooter>

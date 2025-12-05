@@ -40,7 +40,7 @@ export default function Sidebar() {
     <aside className="w-64 h-screen bg-white shadow-md flex flex-col">
       <div className="p-6">
         {/* Logo / title */}
-        <h1 className="text-2xl font-bold text-purple-600 text-center">ZestPOS</h1>
+        <h1 className="text-2xl font-bold text-[#800080] text-center">SCPTrading</h1>
       </div>
 
       <nav className="flex-1 space-y-2 px-4">
@@ -55,7 +55,7 @@ export default function Sidebar() {
             <Link
               key={name}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition ${isActive ? "bg-purple-600 text-white" : "text-gray-700 hover:bg-gray-100"
+              className={`flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition ${isActive ? "bg-purple-100 text-[#800080]" : "text-gray-700 hover:bg-gray-100"
                 }`}
             >
               <Icon className="h-5 w-5" />

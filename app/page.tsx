@@ -21,7 +21,7 @@ export default function Home() {
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold">All Bills</h1>
                 <Link href="/create-bill">
-                  <Button className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white">
+                  <Button className="bg-[#800080] cursor-pointer hover:bg-[#660066] text-white">
                     Create Invoice
                   </Button>
                 </Link>

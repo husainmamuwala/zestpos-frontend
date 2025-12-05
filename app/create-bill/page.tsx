@@ -220,7 +220,7 @@ export default function CreateBillPage() {
         </div>
 
         <div className="flex items-center justify-between mt-6 px-8">
-          <Button onClick={handleAddItem} className="bg-purple-600 cursor-pointer text-white hover:bg-purple-700 px-4 py-2 text-sm">
+          <Button onClick={handleAddItem} className="bg-[#800080] cursor-pointer text-white hover:bg-[#660066] px-4 py-2 text-sm">
             <Plus className="h-4 w-4 mr-2" /> Add Item
           </Button>
           <div />
@@ -260,12 +260,12 @@ export default function CreateBillPage() {
               </span>
             </div>
             <div className="text-md font-semibold">
-              Final: <span className="text-purple-700">OMR {total.toFixed(3)}</span>
+              Final: <span className="text-[#800080]">OMR {total.toFixed(3)}</span>
             </div>
 
             <div>
               <Button
-                className={`px-6 py-2 ${saveDisabled ? "bg-gray-200 text-gray-400" : "bg-purple-600 hover:bg-purple-700 text-white cursor-pointer"}`}
+                className={`px-6 py-2 ${saveDisabled ? "bg-gray-200 text-gray-400" : "bg-[#800080] hover:bg-purple-700 text-white cursor-pointer"}`}
                 onClick={handleSaveInvoice}
                 disabled={saveDisabled}
                 aria-disabled={saveDisabled}

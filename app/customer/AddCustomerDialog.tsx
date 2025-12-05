@@ -53,8 +53,13 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
 }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogTrigger asChild>
-      <Button className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white">
-        <span className="flex items-center"><span className="mr-2">+</span>Add Account</span>
+      <Button className="bg-[#800080] cursor-pointer hover:bg-[#660066] text-white">
+        <span className="flex items-center">
+          <span className="mr-2 text-lg">
+            +
+          </span>
+          Add Supplier
+        </span>
       </Button>
     </DialogTrigger>
     <DialogContent className="sm:max-w-lg">
@@ -63,35 +68,81 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
       </DialogHeader>
       <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 mt-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name<span className="text-red-600">*</span></label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Customer name" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Name<span className="text-red-600">*</span>
+          </label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Customer name"
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Address<span className="text-red-600">*</span></label>
-          <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Customer address" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Address<span className="text-red-600">*</span>
+          </label>
+          <Input
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Customer address"
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +91 98765 43210" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Phone
+          </label>
+          <Input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="e.g. +91 98765 43210"
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person Name</label>
-          <Input value={contactPersonName} onChange={(e) => setContactPersonName(e.target.value)} placeholder="Optional" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Contact Person Name
+          </label>
+          <Input
+            value={contactPersonName}
+            onChange={(e) => setContactPersonName(e.target.value)}
+            placeholder="Optional"
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Optional" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
+          <Input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Optional"
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
-          <Input value={deliveryaddress} onChange={(e) => setDeliveryaddress(e.target.value)} placeholder="Optional" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Delivery Address
+          </label>
+          <Input
+            value={deliveryaddress}
+            onChange={(e) => setDeliveryaddress(e.target.value)}
+            placeholder="Optional"
+          />
         </div>
         {formError && <div className="text-sm text-red-600">{formError}</div>}
         <DialogFooter className="flex justify-end gap-2">
-          <Button className="cursor-pointer" variant="outline" type="button" onClick={onCancel} disabled={saving}>
+          <Button
+            className="cursor-pointer"
+            variant="outline"
+            type="button"
+            onClick={onCancel}
+            disabled={saving}
+          >
             Cancel
           </Button>
-          <Button type="submit" className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white" disabled={saving}>
+          <Button
+            type="submit"
+            className="bg-[#800080] cursor-pointer hover:bg-[#660066] text-white"
+            disabled={saving}
+          >
             {saving ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>

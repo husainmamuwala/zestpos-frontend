@@ -29,14 +29,14 @@ export default function InvoiceTable() {
                 </thead>
                 <tbody>
                     {invoices.map((invoice) => (
-                        <tr key={invoice._id} className="border-b hover:bg-gray-50 h-14">
+                        <tr key={invoice._id} className="border-b hover:bg-gray-50 h-12">
                             <td className="px-4 py-2">{invoice.manualInvoiceNumber || "-"}</td>
                             <td className="px-4 py-2">{invoice.customer?.name || "-"}</td>
                             <td className="px-4 py-2">{invoice.totalAmount?.toFixed(2)}</td>
                             <td className="px-4 py-2">{formatDate(invoice.invoiceDate)}</td>
                             <td className="px-4 py-2">
                                 <button
-                                    className="cursor-pointer text-[#9811fa] flex items-center gap-1 hover:bg-[#9811fa]/10 px-4 h-10 rounded-lg"
+                                    className="cursor-pointer text-[#800080] flex items-center gap-1 hover:bg-[#9811fa]/10 px-4 h-10 rounded-lg"
                                     onClick={() => { handleDownload(invoice, "TAX INVOICE"); handleDownload(invoice, "DELIVERY ORDER"); }}
                                 >
                                     <Download className="w-4 h-4" /> Download

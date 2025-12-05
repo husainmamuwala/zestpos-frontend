@@ -22,6 +22,7 @@ const Loader = ({ size = 40, text = "Loading...", fullScreen = false }: LoaderPr
     </div>
   );
 
+  // For full screen loading overlay
   if (fullScreen) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-50">
@@ -30,7 +31,12 @@ const Loader = ({ size = 40, text = "Loading...", fullScreen = false }: LoaderPr
     );
   }
 
-  return content;
+  // Normal (non-fullscreen) centered loader
+  return (
+    <div className="flex items-center justify-center h-full w-full py-10">
+      {content}
+    </div>
+  );
 };
 
 export default Loader;
