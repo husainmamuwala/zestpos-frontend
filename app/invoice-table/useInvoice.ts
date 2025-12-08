@@ -167,6 +167,8 @@ export function useInvoice() {
         leftLines.push(`Phone: ${invoice.customer.phone}`);
       if (invoice.customer?.email)
         leftLines.push(`Email: ${invoice.customer.email}`);
+      if (invoice.customer?.referenceNumber)
+        leftLines.push(`Reference Number: ${invoice.customer.referenceNumber}`);
 
       // gather right content lines
       const rightLines: string[] = [];

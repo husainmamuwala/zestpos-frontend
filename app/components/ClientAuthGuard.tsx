@@ -14,8 +14,6 @@ export default function ClientAuthGuard({ children }: { children: React.ReactNod
   const validateToken = async (token: string | null, setLoading: any) => {
     try {
       const res = await authApi.get("/invoice/all");
-      console.log("response", res);
-
       if (res.data.status !== "success" || !token) {
         localStorage.removeItem("zestpos_token");
         router.replace(`/login`);

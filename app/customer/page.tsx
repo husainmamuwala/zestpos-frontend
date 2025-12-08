@@ -14,6 +14,7 @@ interface Customer {
   contactPersonName?: string;
   email?: string;
   deliveryaddress?: string;
+  referenceNumber?: string;
   createdAt?: string;
 };
 
@@ -30,6 +31,7 @@ export default function CustomersPage() {
   const [contactPersonName, setContactPersonName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [deliveryaddress, setDeliveryaddress] = useState<string>("");
+  const [referenceNumber, setReferenceNumber] = useState<string>("");
 
   const [saving, setSaving] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -67,11 +69,6 @@ export default function CustomersPage() {
       setFormError("Address is required.");
       return false;
     }
-    // if (!phone.trim()) {
-    //   setFormError("Phone is required.");
-    //   return false;
-    // }
-    // basic phone pattern (allow +, spaces, digits)
     if (phone && !/^[0-9+\-\s()]{6,20}$/.test(phone.trim())) {
       setFormError("Enter a valid phone number (6–20 digits, may include +, -, spaces).");
       return false;
@@ -98,6 +95,7 @@ export default function CustomersPage() {
       contactPersonName: contactPersonName.trim() || undefined,
       email: email.trim() || undefined,
       deliveryaddress: deliveryaddress.trim() || undefined,
+      referenceNumber: referenceNumber.trim() || undefined,
     };
 
     try {
@@ -142,6 +140,8 @@ export default function CustomersPage() {
             setEmail={setEmail}
             deliveryaddress={deliveryaddress}
             setDeliveryaddress={setDeliveryaddress}
+            referenceNumber={referenceNumber}
+            setReferenceNumber={setReferenceNumber}
             formError={formError}
             saving={saving}
             onSubmit={handleAddCustomer}

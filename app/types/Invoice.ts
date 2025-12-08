@@ -7,6 +7,7 @@ export interface Customer {
   contactPersonName: string;
   email: string;
   deliveryaddress: string;
+  referenceNumber: string;
   __v: number;
 }
 

@@ -25,6 +25,8 @@ interface AddCustomerDialogProps {
   setEmail: (v: string) => void;
   deliveryaddress: string;
   setDeliveryaddress: (v: string) => void;
+  referenceNumber: string;
+  setReferenceNumber: (v: string) => void;
   formError: string | null;
   saving: boolean;
   onSubmit: (e?: React.FormEvent) => void;
@@ -46,6 +48,8 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
   setEmail,
   deliveryaddress,
   setDeliveryaddress,
+  referenceNumber,
+  setReferenceNumber,
   formError,
   saving,
   onSubmit,
@@ -125,6 +129,16 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
             value={deliveryaddress}
             onChange={(e) => setDeliveryaddress(e.target.value)}
             placeholder="Optional"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Reference Number
+          </label>
+          <Input
+            value={referenceNumber}
+            onChange={(e) => setReferenceNumber(e.target.value)}
+            placeholder="Reference Number"
           />
         </div>
         {formError && <div className="text-sm text-red-600">{formError}</div>}
