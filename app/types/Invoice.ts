@@ -29,6 +29,7 @@ export interface Invoice {
   customer: Customer;
   invoiceNumber: string;
   manualInvoiceNumber?: string;
+  referenceNumber?: string;
   invoiceDate: string;    
   supplyDate: string;      
   items: InvoiceItem[];

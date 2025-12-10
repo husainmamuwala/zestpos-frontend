@@ -43,6 +43,8 @@ export default function CreateBillPage() {
     invoiceDateRef,
     supplyDateRef,
     invoiceNumberRef,
+    referenceNumber,
+    setreferenceNumber,
     itemNameRefs,
     itemPriceRefs,
     itemQtyRefs,
@@ -60,7 +62,7 @@ export default function CreateBillPage() {
           <p className="text-gray-600">Enter invoice details and add items below.</p>
         </div>
         <div className="bg-transparent mb-6 px-8">
-          <div className="grid sm:grid-cols-2 grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid sm:grid-cols-2 grid-cols-1 md:grid-cols-6 gap-4">
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
               <Select onValueChange={handleCustomerSelect} value={selectedCustomer}>
@@ -111,6 +113,10 @@ export default function CreateBillPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
               <Input ref={invoiceNumberRef} value={manualInvoiceNumber} placeholder="Eg: INV-001" onChange={(e) => setmanualInvoiceNumber(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
+              <Input ref={invoiceNumberRef} value={referenceNumber} placeholder="" onChange={(e) => setreferenceNumber(e.target.value)} />
             </div>
           </div>
 

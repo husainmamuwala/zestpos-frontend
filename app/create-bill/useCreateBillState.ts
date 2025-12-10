@@ -43,6 +43,7 @@ export function useCreateBillState() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCustomer, setSelectedCustomer] = useState<string>(savedState.selectedCustomer ?? "");
     const [manualInvoiceNumber, setmanualInvoiceNumber] = useState<string>("");
+    const [referenceNumber, setreferenceNumber] = useState<string>("");
 
     const invoiceDateRef = useRef<HTMLInputElement | null>(null);
     const supplyDateRef = useRef<HTMLInputElement | null>(null);
@@ -279,6 +280,7 @@ export function useCreateBillState() {
                 customerId: selectedCustomer,
                 invoiceDate: invoiceDate || today,
                 manualInvoiceNumber: manualInvoiceNumber,
+                referenceNumber: referenceNumber,
                 supplyDate: supplyDate || today,
                 items: items.map((it) => ({
                     itemName: it.name,
@@ -318,6 +320,7 @@ export function useCreateBillState() {
             setCustomer(null);
             setInvoiceDate("");
             setSupplyDate("");
+            setreferenceNumber("");
 
             // notify success
             try {
@@ -385,5 +388,7 @@ export function useCreateBillState() {
         itemPriceRefs,
         itemQtyRefs,
         itemVatRefs,
+        referenceNumber,
+        setreferenceNumber,
     };
 }
