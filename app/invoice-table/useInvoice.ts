@@ -325,7 +325,7 @@ export function useInvoice() {
 
       totalsRows.push({
         label: "Total VAT:",
-        value: `OMR ${Number(totalvatamt.toFixed(3))}`,
+        value: `OMR ${(totalvatamt.toFixed(3))}`,
       });
 
       totalsRows.push({
