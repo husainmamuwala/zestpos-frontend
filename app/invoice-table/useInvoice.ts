@@ -167,8 +167,8 @@ export function useInvoice() {
         leftLines.push(`Phone: ${invoice.customer.phone}`);
       if (invoice.customer?.email)
         leftLines.push(`Email: ${invoice.customer.email}`);
-      if (invoice.customer?.referenceNumber)
-        leftLines.push(`Reference Number: ${invoice.customer.referenceNumber}`);
+      if (invoice?.referenceNumber)
+        leftLines.push(`Reference Number: ${invoice?.referenceNumber}`);
 
       // gather right content lines
       const rightLines: string[] = [];
@@ -239,7 +239,7 @@ export function useInvoice() {
           Number(item.price).toFixed(3),
           `${item.vat ?? 0}%`,
           vatAmt.toFixed(3),
-          Number(item.finalAmount).toFixed(3),
+          (item.finalAmount).toFixed(3),
         ];
       });
     };
@@ -320,7 +320,7 @@ export function useInvoice() {
 
       totalsRows.push({
         label: "Total Amount:",
-        value: `OMR ${Number(totalItemAmt.toFixed(3))}`,
+        value: `OMR ${(totalItemAmt.toFixed(3))}`,
       });
 
       totalsRows.push({
