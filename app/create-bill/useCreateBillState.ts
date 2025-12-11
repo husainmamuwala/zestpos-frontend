@@ -298,30 +298,6 @@ export function useCreateBillState() {
                 toast.success("Invoice PDF downloaded successfully");
             }
 
-            // On success, clear persisted state and reset local state
-            try {
-                if (typeof window !== "undefined") {
-                    localStorage.removeItem(STORAGE_KEY);
-                }
-            } catch (e) {
-                // ignore
-            }
-
-            setItems([
-                {
-                    id: Date.now(),
-                    name: "",
-                    price: 0,
-                    qty: 1,
-                    vat: 0,
-                },
-            ]);
-            setSelectedCustomer("");
-            setCustomer(null);
-            setInvoiceDate("");
-            setSupplyDate("");
-            setreferenceNumber("");
-
             // notify success
             try {
                 const successMsg = res?.data?.message || "Invoice created successfully";
