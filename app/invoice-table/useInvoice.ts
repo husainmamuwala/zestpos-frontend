@@ -215,7 +215,7 @@ export function useInvoice() {
           lineTotal.toFixed(3),
           `${item.vat ?? 0}%`,
           vatAmt.toFixed(3),
-          
+
         ];
       });
     };
@@ -258,7 +258,7 @@ export function useInvoice() {
       autoTable(doc, {
         startY,
         theme: "grid",
-        head: [["Sr", "Item Name", "Qty", "Price", "Amount", "VAT", "VAT Amt"]],
+        head: title === "TAX INVOICE" ? [["Sr", "Item Name", "Qty", "Price", "Amount", "VAT", "VAT Amt"]] : [["Sr", "Item Name", "Qty", "Price", "Amount"]],
         body,
         styles: {
           font: "times",

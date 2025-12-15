@@ -93,6 +93,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               value={email}
+              placeholder="Enter your email"
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               aria-required
