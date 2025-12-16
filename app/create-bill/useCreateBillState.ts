@@ -146,6 +146,25 @@ export function useCreateBillState() {
         setFilteredCustomers(filtered);
     };
 
+    const handleReset = () => {
+        setCustomer(null);
+        setInvoiceDate("");
+        setSupplyDate("");
+        setSelectedCustomer("");
+        setItems([
+            {
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                name: "",
+                price: 0,
+                qty: 0,
+                vat: 0,
+            }
+        ]);
+        localStorage.removeItem(STORAGE_KEY);
+        saveStateToStorage({ items: [] });
+        
+    };
+
     const saveStateToStorage = (newState: Partial<StoredState>) => {
         if (typeof window === "undefined") return;
 
@@ -245,7 +264,7 @@ export function useCreateBillState() {
             saveStateToStorage({ items: newItems });
             return newItems;
         });
-        
+
     };
 
     const handleRemove = (id: number) => {
@@ -344,6 +363,7 @@ export function useCreateBillState() {
         items,
         setItems,
         handleSearch,
+        handleReset,
         handleCustomerSelect,
         handleAddItem,
         handleItemChange,

@@ -45,6 +45,7 @@ export default function CreateBillPage() {
     invoiceNumberRef,
     referenceNumber,
     setreferenceNumber,
+    handleReset,
     itemNameRefs,
     itemPriceRefs,
     itemQtyRefs,
@@ -236,8 +237,8 @@ export default function CreateBillPage() {
           style={{ zIndex: 30 }}
         >
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="px-6 py-2">
-              Cancel
+            <Button onClick={handleReset} variant="outline" className="px-6 py-2">
+              Reset
             </Button>
           </div>
 
