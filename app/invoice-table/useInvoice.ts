@@ -130,7 +130,7 @@ export function useInvoice() {
 
       const leftLines: string[] = [];
       leftLines.push("Supplier Details");
-      if (invoice.customer?.name) leftLines.push(`Name: ${invoice.customer.name || "-"}`);
+      if (invoice.customer?.name) leftLines.push(`${invoice.customer.name || "-"}`);
       const address = invoice.customer?.address || "-";
       address.split("\n").forEach((ln) => leftLines.push(ln || "-"));
       if (invoice.customer?.phone) leftLines.push(`Phone: ${invoice.customer.phone}`);
@@ -155,10 +155,10 @@ export function useInvoice() {
 
       let cursorY = startY + boxPadding + layout.boxTitleOffset;
       doc.setFont("times", "bold");
-      doc.setFontSize(11);
+      doc.setFontSize(12);
       doc.text(leftLines[0], boxLeftX + boxPadding, cursorY);
       doc.setFont("times", "semibold");
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       cursorY += layout.boxLineHeight;
       for (let i = 1; i < leftLines.length; i++) {
         doc.text(leftLines[i], boxLeftX + boxPadding, cursorY);
@@ -167,10 +167,10 @@ export function useInvoice() {
 
       cursorY = startY + boxPadding + layout.boxTitleOffset;
       doc.setFont("times", "bold");
-      doc.setFontSize(11);
+      doc.setFontSize(12);
       doc.text(rightLines[0], boxRightX + boxPadding, cursorY);
       doc.setFont("times", "semibold");
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       cursorY += layout.boxLineHeight;
       for (let i = 1; i < rightLines.length; i++) {
         doc.text(rightLines[i], boxRightX + boxPadding, cursorY);
@@ -327,7 +327,7 @@ export function useInvoice() {
       doc.rect(sigRightX, sigY, sigBoxWidth, sigBoxHeight);
 
       doc.setFont("times", "semibold");
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.text("Authorised Signatory", sigLeftX, sigY - 3);
       doc.text("Customer Signature", sigRightX, sigY - 3);
 
