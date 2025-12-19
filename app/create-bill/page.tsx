@@ -13,6 +13,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ItemSelect } from "@/app/components/ItemSelect";
 import { useCreateBillState } from "./useCreateBillState";
+import { useState } from "react";
 
 export default function CreateBillPage() {
   const {
@@ -52,21 +53,30 @@ export default function CreateBillPage() {
     itemVatRefs,
   } = useCreateBillState();
 
+  const [editingId, setEditingId] = useState<number | null>(null);
+
   return (
     <div className="">
-      <div
-        className="mx-auto overflow-auto h-screen"
-      >
+      <div className="mx-auto overflow-auto h-screen">
         {/* Header */}
         <div className="p-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-1">Create Invoice</h1>
-          <p className="text-gray-600">Enter invoice details and add items below.</p>
+          <h1 className="text-3xl font-semibold text-gray-900 mb-1">
+            Create Invoice
+          </h1>
+          <p className="text-gray-600">
+            Enter invoice details and add items below.
+          </p>
         </div>
         <div className="bg-transparent mb-6 px-8">
           <div className="grid sm:grid-cols-2 grid-cols-1 md:grid-cols-6 gap-4">
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-              <Select onValueChange={handleCustomerSelect} value={selectedCustomer}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Customer
+              </label>
+              <Select
+                onValueChange={handleCustomerSelect}
+                value={selectedCustomer}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Search and select a customer" />
                 </SelectTrigger>
@@ -84,40 +94,74 @@ export default function CreateBillPage() {
                     {filteredCustomers.slice(0, 50).map((cust) => (
                       <SelectItem key={cust._id} value={cust._id}>
                         {cust.name}
-                        <span className="">{cust.address ? ` - ${cust.address}` : ""}</span>
+                        <span className="">
+                          {cust.address ? ` - ${cust.address}` : ""}
+                        </span>
                       </SelectItem>
                     ))}
                     {filteredCustomers.length === 0 && (
-                      <div className="p-2 text-sm text-gray-500">No customers found</div>
+                      <div className="p-2 text-sm text-gray-500">
+                        No customers found
+                      </div>
                     )}
                   </div>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
-              <Input ref={invoiceDateRef} type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  supplyDateRef.current?.focus();
-                }
-              }} />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Invoice Date
+              </label>
+              <Input
+                ref={invoiceDateRef}
+                type="date"
+                value={invoiceDate}
+                onChange={(e) => setInvoiceDate(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    supplyDateRef.current?.focus();
+                  }
+                }}
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Supply Date</label>
-              <Input ref={supplyDateRef} type="date" value={supplyDate} onChange={(e) => setSupplyDate(e.target.value)} onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  invoiceNumberRef.current?.focus();
-                }
-              }} />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Supply Date
+              </label>
+              <Input
+                ref={supplyDateRef}
+                type="date"
+                value={supplyDate}
+                onChange={(e) => setSupplyDate(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    invoiceNumberRef.current?.focus();
+                  }
+                }}
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
-              <Input ref={invoiceNumberRef} value={manualInvoiceNumber} placeholder="Eg: INV-001" onChange={(e) => setmanualInvoiceNumber(e.target.value)} />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Invoice Number
+              </label>
+              <Input
+                ref={invoiceNumberRef}
+                value={manualInvoiceNumber}
+                placeholder="Eg: INV-001"
+                onChange={(e) => setmanualInvoiceNumber(e.target.value)}
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
-              <Input ref={invoiceNumberRef} value={referenceNumber} placeholder="" onChange={(e) => setreferenceNumber(e.target.value)} />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Reference Number
+              </label>
+              <Input
+                ref={invoiceNumberRef}
+                value={referenceNumber}
+                placeholder=""
+                onChange={(e) => setreferenceNumber(e.target.value)}
+              />
             </div>
           </div>
 
@@ -127,7 +171,9 @@ export default function CreateBillPage() {
         {/* Items header */}
         <div className="flex items-center justify-between mb-3 px-8">
           <h2 className="text-lg font-semibold text-gray-800">Items</h2>
-          <div className="text-sm text-gray-500">Add products and set price / VAT / quantity</div>
+          <div className="text-sm text-gray-500">
+            Add products and set price / VAT / quantity
+          </div>
         </div>
 
         <div className="overflow-x-auto border-gray-200 border mx-8">
@@ -157,7 +203,9 @@ export default function CreateBillPage() {
                       <div className="w-full">
                         <ItemSelect
                           value={item.name}
-                          onValueChange={(value: string) => handleItemChange(item.id, value)}
+                          onValueChange={(value: string) =>
+                            handleItemChange(item.id, value)
+                          }
                           products={productsList}
                           loading={productsLoading}
                           productsError={productsError}
@@ -169,8 +217,23 @@ export default function CreateBillPage() {
                     <td className="px-3 py-2 align-top">
                       <Input
                         type="number"
-                        step="0.001" // Allow 3 decimal places
-                        value={String(item.price)}
+                        step="any"
+                        value={
+                          editingId === item.id
+                            ? item.price
+                            : item.price !== 0 && item.price !== null
+                            ? Number(item.price).toFixed(3)
+                            : ""
+                        }
+                        onFocus={() => setEditingId(item.id)}
+                        onBlur={(e) => {
+                          setEditingId(null);
+
+                          const val = e.target.value;
+                          if (val !== "") {
+                            handleChange(item.id, "price", Number(val));
+                          }
+                        }}
                         onChange={(e) =>
                           handleChange(item.id, "price", e.target.value)
                         }
@@ -197,13 +260,17 @@ export default function CreateBillPage() {
                         type="number"
                         min={0}
                         value={String(item.vat ?? "")}
-                        onChange={(e) => handleChange(item.id, "vat", e.target.value)}
+                        onChange={(e) =>
+                          handleChange(item.id, "vat", e.target.value)
+                        }
                         className="w-20"
                       />
                     </td>
 
                     {/* Final Amount */}
-                    <td className="px-3 py-2 font-medium">{itemFinal(item).toFixed(3)}</td>
+                    <td className="px-3 py-2 font-medium">
+                      {itemFinal(item).toFixed(3)}
+                    </td>
 
                     {/* Remove */}
                     <td className="px-3 py-2 align-top">
@@ -214,9 +281,17 @@ export default function CreateBillPage() {
                         disabled={disableDelete}
                         onClick={() => handleRemove(item.id)}
                         aria-disabled={disableDelete}
-                        title={disableDelete ? "At least one item is required" : "Remove item"}
+                        title={
+                          disableDelete
+                            ? "At least one item is required"
+                            : "Remove item"
+                        }
                       >
-                        <Trash2 className={`h-4 w-4 ${disableDelete ? "text-gray-300" : "text-red-500"}`} />
+                        <Trash2
+                          className={`h-4 w-4 ${
+                            disableDelete ? "text-gray-300" : "text-red-500"
+                          }`}
+                        />
                       </Button>
                     </td>
                   </motion.tr>
@@ -227,7 +302,10 @@ export default function CreateBillPage() {
         </div>
 
         <div className="flex items-center justify-between mt-6 px-8">
-          <Button onClick={handleAddItem} className="bg-[#800080] cursor-pointer text-white hover:bg-[#660066] px-4 py-2 text-sm">
+          <Button
+            onClick={handleAddItem}
+            className="bg-[#800080] cursor-pointer text-white hover:bg-[#660066] px-4 py-2 text-sm"
+          >
             <Plus className="h-4 w-4 mr-2" /> Add Item
           </Button>
           <div />
@@ -237,46 +315,67 @@ export default function CreateBillPage() {
           style={{ zIndex: 30 }}
         >
           <div className="flex items-center gap-3">
-            <Button onClick={handleReset} variant="outline" className="px-6 py-2">
+            <Button
+              onClick={handleReset}
+              variant="outline"
+              className="px-6 py-2"
+            >
               Reset
             </Button>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="text-md font-medium">
-              <span className="text-[#666]">Item Total:</span>   <span className="text-[#222]">
-                OMR {(total - items.reduce((sum, item) => {
-                  const price = Number(item.price) || 0;
-                  const qty = Number(item.qty) || 0;
-                  const vat = Number(item.vat) || 0;
-                  const vatAmount = (price * qty * vat) / 100;
-                  return sum + vatAmount;
-                }, 0)).toFixed(3)}
+              <span className="text-[#666]">Item Total:</span>{" "}
+              <span className="text-[#222]">
+                OMR{" "}
+                {(
+                  total -
+                  items.reduce((sum, item) => {
+                    const price = Number(item.price) || 0;
+                    const qty = Number(item.qty) || 0;
+                    const vat = Number(item.vat) || 0;
+                    const vatAmount = (price * qty * vat) / 100;
+                    return sum + vatAmount;
+                  }, 0)
+                ).toFixed(3)}
               </span>
             </div>
             <div className="text-md font-medium">
-            <span className="text-[#666]">VAT: </span>
-            <span className="text-[#222]">
-                OMR {items.reduce((sum, item) => {
-                  const price = Number(item.price) || 0;
-                  const qty = Number(item.qty) || 0;
-                  const vat = Number(item.vat) || 0;
-                  const vatAmount = (price * qty * vat) / 100;
-                  return sum + vatAmount;
-                }, 0).toFixed(3)}
+              <span className="text-[#666]">VAT: </span>
+              <span className="text-[#222]">
+                OMR{" "}
+                {items
+                  .reduce((sum, item) => {
+                    const price = Number(item.price) || 0;
+                    const qty = Number(item.qty) || 0;
+                    const vat = Number(item.vat) || 0;
+                    const vatAmount = (price * qty * vat) / 100;
+                    return sum + vatAmount;
+                  }, 0)
+                  .toFixed(3)}
               </span>
             </div>
             <div className="text-md font-semibold">
-              Final: <span className="text-[#800080]">OMR {total.toFixed(3)}</span>
+              Final:{" "}
+              <span className="text-[#800080]">OMR {total.toFixed(3)}</span>
             </div>
 
             <div>
               <Button
-                className={`px-6 py-2 ${saveDisabled ? "bg-gray-200 text-gray-400" : "bg-[#800080] hover:bg-purple-700 text-white cursor-pointer"}`}
+                className={`px-6 py-2 ${
+                  saveDisabled
+                    ? "bg-gray-200 text-gray-400"
+                    : "bg-[#800080] hover:bg-purple-700 text-white cursor-pointer"
+                }`}
                 onClick={handleSaveInvoice}
                 disabled={saveDisabled}
                 aria-disabled={saveDisabled}
-                title={saveDisabled ? "Select at least one item to enable Save" : "Save invoice"}
+                title={
+                  saveDisabled
+                    ? "Select at least one item to enable Save"
+                    : "Save invoice"
+                }
               >
                 Download Invoice
               </Button>

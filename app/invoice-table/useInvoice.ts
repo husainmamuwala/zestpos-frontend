@@ -71,6 +71,8 @@ export function useInvoice() {
       sigPadBottom: 3,
     };
 
+    const headerBlockHeight = 20 + layout.headerExtraGap + 20;
+
     const marginX = layout.marginX;
     const headerHeight = layout.headerHeight;
     const footerHeight = layout.footerHeight;
@@ -276,11 +278,15 @@ export function useInvoice() {
           }),
         },
         margin: {
+          top: headerBlockHeight,
           left: marginX,
           right: marginX,
           bottom: footerHeight + reservedSignatureArea,
         },
-        didDrawPage: drawFooter,
+        didDrawPage: () => {
+          drawHeaderImageAndTitle(title, headerHeight + layout.headerExtraGap);
+          drawFooter();
+        },
         rowPageBreak: "avoid",
 
         didParseCell(data) {

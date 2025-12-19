@@ -258,7 +258,7 @@ export function ItemSelect({
                       isActive ? "bg-gray-100 text-black" : "bg-white text-gray-700"
                     }`}
                   >
-                    {p.name}Price: OMR{p.price}
+                    {p.name}
                   </SelectItem>
                 </div>
               );
