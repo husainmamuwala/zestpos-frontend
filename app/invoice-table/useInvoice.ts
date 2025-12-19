@@ -36,7 +36,7 @@ export function useInvoice() {
   // ----------------------------------------------------------
   const handleDownload = (invoice: Invoice, title: string) => {
     const doc = new jsPDF("p", "mm", "a4");
-    doc.setFont("times", "normal");
+    doc.setFont("times", "semibold");
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -56,7 +56,7 @@ export function useInvoice() {
       boxTableGap: 2,
 
       tableCellPadding: 2,
-      tableFontSize: 10,
+      tableFontSize: 12,
 
       totalsBoxWidth: 60,
       totalsVerticalGap: 10,
@@ -157,7 +157,7 @@ export function useInvoice() {
       doc.setFont("times", "bold");
       doc.setFontSize(11);
       doc.text(leftLines[0], boxLeftX + boxPadding, cursorY);
-      doc.setFont("times", "normal");
+      doc.setFont("times", "semibold");
       doc.setFontSize(10);
       cursorY += layout.boxLineHeight;
       for (let i = 1; i < leftLines.length; i++) {
@@ -169,7 +169,7 @@ export function useInvoice() {
       doc.setFont("times", "bold");
       doc.setFontSize(11);
       doc.text(rightLines[0], boxRightX + boxPadding, cursorY);
-      doc.setFont("times", "normal");
+      doc.setFont("times", "semibold");
       doc.setFontSize(10);
       cursorY += layout.boxLineHeight;
       for (let i = 1; i < rightLines.length; i++) {
@@ -234,7 +234,7 @@ export function useInvoice() {
       const body = [...itemRows, ...totalsRows];
 
       const colPercents = isTaxInvoice
-        ? [5, 40, 10, 12, 10, 12, 12]
+        ? [5, 44, 10, 10, 11, 10, 10]
         : [5, 64, 10, 12, 10];
 
       const colWidthsDynamic = computeColWidths(colPercents);
@@ -251,7 +251,7 @@ export function useInvoice() {
           fontSize: layout.tableFontSize,
           cellPadding: layout.tableCellPadding,
           lineColor: [0, 0, 0],
-          lineWidth: 0.1,
+          lineWidth: 0.2,
           textColor: [0, 0, 0],
         },
         headStyles: {
@@ -259,8 +259,8 @@ export function useInvoice() {
           textColor: [0, 0, 0],
           lineColor: [0, 0, 0],
           fontStyle: "bold",
-          lineWidth: 0.1,
-          fontSize: 9,
+          lineWidth: 0.2,
+          fontSize: 10,
           cellPadding: 2,
           halign: "center",
         },
@@ -272,7 +272,7 @@ export function useInvoice() {
           4: { halign: "right", cellWidth: colWidthsDynamic[4] },
           ...(isTaxInvoice && {
             5: { halign: "center", cellWidth: colWidthsDynamic[5] },
-            6: { halign: "right", cellWidth: colWidthsDynamic[6] },
+            6: { halign: "center", cellWidth: colWidthsDynamic[6] },
           }),
         },
         margin: {
@@ -326,7 +326,7 @@ export function useInvoice() {
       doc.rect(sigLeftX, sigY, sigBoxWidth, sigBoxHeight);
       doc.rect(sigRightX, sigY, sigBoxWidth, sigBoxHeight);
 
-      doc.setFont("times", "normal");
+      doc.setFont("times", "semibold");
       doc.setFontSize(10);
       doc.text("Authorised Signatory", sigLeftX, sigY - 3);
       doc.text("Customer Signature", sigRightX, sigY - 3);
