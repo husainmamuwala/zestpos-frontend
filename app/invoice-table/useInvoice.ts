@@ -229,7 +229,7 @@ export function useInvoice() {
           ]
         : [
             ["", "", "Total Amount:", "", `OMR ${totalItemAmt.toFixed(3)}`],
-            // ["", "", "", "Total VAT:", `OMR ${totalVatAmt.toFixed(3)}`],
+            ["", "", "Total VAT:", "", `OMR ${totalVatAmt.toFixed(3)}`],
             ["", "", "Grand Total:", "", `OMR ${grandTotal.toFixed(3)}`],
           ];
 
