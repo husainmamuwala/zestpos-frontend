@@ -46,7 +46,7 @@ export function useInvoice() {
       marginX: 14,
       headerHeight: 30,
       headerExtraGap: 10,
-      footerHeight: 20,
+      footerHeight: 10,
 
       gapBetweenBoxes: 0,
       boxPadding: 4,
@@ -101,7 +101,14 @@ export function useInvoice() {
 
     const drawHeaderImageAndTitle = (titleText: string, startY: number) => {
       try {
-        doc.addImage("/SCP Letterhead - Top.png", "PNG", 0, 0, pageWidth, headerHeight);
+        doc.addImage(
+          "/SCP Letterhead - Top.png",
+          "PNG",
+          0,
+          0,
+          pageWidth,
+          headerHeight
+        );
       } catch {}
       doc.setFont("times", "bold");
       doc.setFontSize(18);
@@ -132,11 +139,14 @@ export function useInvoice() {
 
       const leftLines: string[] = [];
       leftLines.push("Supplier Details");
-      if (invoice.customer?.name) leftLines.push(`${invoice.customer.name || "-"}`);
+      if (invoice.customer?.name)
+        leftLines.push(`${invoice.customer.name || "-"}`);
       const address = invoice.customer?.address || "-";
       address.split("\n").forEach((ln) => leftLines.push(ln || "-"));
-      if (invoice.customer?.phone) leftLines.push(`Phone: ${invoice.customer.phone}`);
-      if (invoice.customer?.email) leftLines.push(`Email: ${invoice.customer.email}`);
+      if (invoice.customer?.phone)
+        leftLines.push(`Phone: ${invoice.customer.phone}`);
+      if (invoice.customer?.email)
+        leftLines.push(`Email: ${invoice.customer.email}`);
       if (invoice?.referenceNumber)
         leftLines.push(`Reference Number: ${invoice.referenceNumber}`);
 
@@ -147,9 +157,15 @@ export function useInvoice() {
       rightLines.push(`Invoice Date: ${formatDate(invoice.invoiceDate)}`);
       rightLines.push(`Supply Date: ${formatDate(invoice.supplyDate)}`);
 
-      const leftHeight = leftLines.length * layout.boxLineHeight + boxPadding * 2;
-      const rightHeight = rightLines.length * layout.boxLineHeight + boxPadding * 2;
-      const usedBoxHeight = Math.max(leftHeight, rightHeight, layout.minBoxHeight);
+      const leftHeight =
+        leftLines.length * layout.boxLineHeight + boxPadding * 2;
+      const rightHeight =
+        rightLines.length * layout.boxLineHeight + boxPadding * 2;
+      const usedBoxHeight = Math.max(
+        leftHeight,
+        rightHeight,
+        layout.minBoxHeight
+      );
 
       doc.setLineWidth(0.2);
       doc.rect(boxLeftX, startY, boxWidth, usedBoxHeight);
@@ -211,26 +227,46 @@ export function useInvoice() {
 
       const totalVatAmt = invoice.items.reduce(
         (s: number, it: any) =>
-          s + ((Number(it.price || 0) * Number(it.qty || 0) * Number(it.vat || 0)) / 100),
+          s +
+          (Number(it.price || 0) * Number(it.qty || 0) * Number(it.vat || 0)) /
+            100,
         0
       );
 
-      const grandTotal = Number(invoice.totalAmount ?? totalItemAmt + totalVatAmt);
+      const grandTotal = Number(
+        invoice.totalAmount ?? totalItemAmt + totalVatAmt
+      );
 
       const isTaxInvoice = title === "TAX INVOICE";
-      const TOTAL_LABEL_COL = isTaxInvoice? 3 : 2;
+      const TOTAL_LABEL_COL = isTaxInvoice ? 3 : 2;
       const TOTAL_VALUE_COL = isTaxInvoice ? 5 : 3;
 
       const totalsRows = isTaxInvoice
         ? [
-            ["", "", "", "Total Amount:", "", `OMR ${totalItemAmt.toFixed(3)}`, ""],
-            ["", "", "", "Total VAT:", "", `OMR ${totalVatAmt.toFixed(3)}`, ""],
-            ["", "", "", "Grand Total:", "", `OMR ${grandTotal.toFixed(3)}`, ""],
+            [
+              "",
+              "",
+              "",
+              "Total Amount:",
+              "",
+              `OMR ${totalItemAmt.toFixed(3)}`,
+              "",
+            ],
+            ["", "", "", "Total VAT: ", "", `OMR ${totalVatAmt.toFixed(3)}`, ""],
+            [
+              "",
+              "",
+              "",
+              "Grand Total:",
+              "",
+              `OMR ${grandTotal.toFixed(3)}`,
+              "",
+            ],
           ]
         : [
-            ["", "", "Total Amount:", "", `OMR ${totalItemAmt.toFixed(3)}`],
-            ["", "", "Total VAT:", "", `OMR ${totalVatAmt.toFixed(3)}`],
-            ["", "", "Grand Total:", "", `OMR ${grandTotal.toFixed(3)}`],
+            ["", "Total Amount:", "", `OMR ${totalItemAmt.toFixed(3)}`, ""],
+            ["", "Total VAT: ", "", `OMR ${totalVatAmt.toFixed(3)}`, ""],
+            ["", "Grand Total:", "", `OMR ${grandTotal.toFixed(3)}`, ""],
           ];
 
       const body = [...itemRows, ...totalsRows];
@@ -289,17 +325,62 @@ export function useInvoice() {
         },
         rowPageBreak: "avoid",
 
+        // didParseCell(data) {
+        //   const isTotalsRow = data.row.index >= itemRows.length;
+
+        //   if (isTotalsRow) {
+        //     if (data.column.index === TOTAL_LABEL_COL) {
+        //       data.cell.colSpan = isTaxInvoice ? 2 : 2;
+        //       data.cell.styles.fontStyle = "bold";
+        //       data.cell.styles.halign = "right";
+        //     }
+        //     if (data.column.index === TOTAL_VALUE_COL) {
+        //       data.cell.colSpan = isTaxInvoice ? 2 : 1;
+        //       data.cell.styles.fontStyle = "bold";
+        //       data.cell.styles.halign = "right";
+        //     }
+        //   }
+        // },
         didParseCell(data) {
           const isTotalsRow = data.row.index >= itemRows.length;
 
-          if (isTotalsRow) {
+          if (!isTotalsRow) return;
+
+          // ✅ TAX INVOICE Column Merging Logic
+          if (isTaxInvoice) {
             if (data.column.index === TOTAL_LABEL_COL) {
-              data.cell.colSpan = isTaxInvoice ? 2 : 2;
+              data.cell.colSpan = 2;
               data.cell.styles.fontStyle = "bold";
               data.cell.styles.halign = "right";
             }
+
             if (data.column.index === TOTAL_VALUE_COL) {
-              data.cell.colSpan = isTaxInvoice ? 2 : 1;
+              data.cell.colSpan = 2;
+              data.cell.styles.fontStyle = "bold";
+              data.cell.styles.halign = "right";
+            }
+          }
+
+          // ✅ DELIVERY ORDER — Column Merging Logic
+          if (!isTaxInvoice) {
+            if (data.column.index === 1) {
+              data.cell.colSpan = 2;
+              data.cell.styles.fontStyle = "bold";
+              data.cell.styles.halign = "right";
+            }
+            if (data.column.index === 2) {
+              data.cell.styles.fontStyle = "bold";
+              data.cell.styles.halign = "right";
+            }
+            // Label starts at Price (index 3), spans Price + Amount
+            if (data.column.index === 3) {
+              data.cell.colSpan = 2;
+              data.cell.styles.fontStyle = "bold";
+              data.cell.styles.halign = "right";
+            }
+
+            // Value stays in Amount column (index 4)
+            if (data.column.index === 4) {
               data.cell.styles.fontStyle = "bold";
               data.cell.styles.halign = "right";
             }
@@ -319,7 +400,10 @@ export function useInvoice() {
           : afterY + 20
       );
 
-      if (sigY + sigBoxHeight + sigUnderTextGap > pageHeight - footerHeight - 10) {
+      if (
+        sigY + sigBoxHeight + sigUnderTextGap >
+        pageHeight - footerHeight - 10
+      ) {
         doc.addPage();
         drawFooter();
         sigY = 40;
