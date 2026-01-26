@@ -46,7 +46,7 @@ export function useInvoice() {
       marginX: 14,
       headerHeight: 30,
       headerExtraGap: 10,
-      footerHeight: 10,
+      footerHeight: 14,
 
       gapBetweenBoxes: 0,
       boxPadding: 4,
@@ -219,71 +219,55 @@ export function useInvoice() {
 
     const drawTable = (startY: number) => {
       const itemRows = generateItemRows();
-
+    
       const totalItemAmt = invoice.items.reduce(
         (s: number, it: any) => s + Number(it.price || 0) * Number(it.qty || 0),
         0
       );
-
+    
       const totalVatAmt = invoice.items.reduce(
         (s: number, it: any) =>
           s +
-          (Number(it.price || 0) * Number(it.qty || 0) * Number(it.vat || 0)) /
-            100,
+          (Number(it.price || 0) * Number(it.qty || 0) * Number(it.vat || 0)) / 100,
         0
       );
-
+    
       const grandTotal = Number(
         invoice.totalAmount ?? totalItemAmt + totalVatAmt
       );
-
+    
       const isTaxInvoice = title === "TAX INVOICE";
       const TOTAL_LABEL_COL = isTaxInvoice ? 3 : 2;
       const TOTAL_VALUE_COL = isTaxInvoice ? 5 : 3;
-
+    
       const totalsRows = isTaxInvoice
         ? [
-            [
-              "",
-              "",
-              "",
-              "Total Amount:",
-              "",
-              `OMR ${totalItemAmt.toFixed(3)}`,
-              "",
-            ],
+            ["", "", "", "Total Amount:", "", `OMR ${totalItemAmt.toFixed(3)}`, ""],
             ["", "", "", "Total VAT: ", "", `OMR ${totalVatAmt.toFixed(3)}`, ""],
-            [
-              "",
-              "",
-              "",
-              "Grand Total:",
-              "",
-              `OMR ${grandTotal.toFixed(3)}`,
-              "",
-            ],
+            ["", "", "", "Grand Total:", "", `OMR ${grandTotal.toFixed(3)}`, ""],
           ]
         : [
             ["", "Total Amount:", "", `OMR ${totalItemAmt.toFixed(3)}`, ""],
             ["", "Total VAT: ", "", `OMR ${totalVatAmt.toFixed(3)}`, ""],
             ["", "Grand Total:", "", `OMR ${grandTotal.toFixed(3)}`, ""],
           ];
-
-      const body = [...itemRows, ...totalsRows];
-
+    
       const colPercents = isTaxInvoice
         ? [5, 44, 10, 10, 11, 10, 10]
         : [5, 64, 10, 12, 10];
-
+    
       const colWidthsDynamic = computeColWidths(colPercents);
-
+    
+      // ----------------------------------------------------------
+      // 1️⃣ ITEMS TABLE (UNCHANGED STYLING)
+      // ----------------------------------------------------------
       autoTable(doc, {
         startY,
         theme: "grid",
         head: isTaxInvoice
           ? [["Sr", "Item Name", "Qty", "Price", "Amount", "VAT", "VAT Amt"]]
           : [["Sr", "Item Name", "Qty", "Price", "Amount"]],
-        body,
+        body: itemRows,
         styles: {
           font: "times",
           fontSize: layout.tableFontSize,
@@ -324,62 +308,83 @@ export function useInvoice() {
           drawFooter();
         },
         rowPageBreak: "avoid",
-
-        // didParseCell(data) {
-        //   const isTotalsRow = data.row.index >= itemRows.length;
-
-        //   if (isTotalsRow) {
-        //     if (data.column.index === TOTAL_LABEL_COL) {
-        //       data.cell.colSpan = isTaxInvoice ? 2 : 2;
-        //       data.cell.styles.fontStyle = "bold";
-        //       data.cell.styles.halign = "right";
-        //     }
-        //     if (data.column.index === TOTAL_VALUE_COL) {
-        //       data.cell.colSpan = isTaxInvoice ? 2 : 1;
-        //       data.cell.styles.fontStyle = "bold";
-        //       data.cell.styles.halign = "right";
-        //     }
-        //   }
-        // },
+      });
+    
+      let afterItemsY = (doc as any).lastAutoTable.finalY;
+    
+      // ----------------------------------------------------------
+      // 2️⃣ ENSURE TOTALS + SIGNATURES NEVER ORPHAN
+      // ----------------------------------------------------------
+      const APPROX_ROW_HEIGHT = 8;
+      const totalsHeight = totalsRows.length * APPROX_ROW_HEIGHT;
+      const requiredHeight = totalsHeight + reservedSignatureArea;
+    
+      const remainingSpace =
+        pageHeight - footerHeight - afterItemsY;
+    
+      if (requiredHeight > remainingSpace) {
+        doc.addPage();
+        drawHeaderImageAndTitle(title, headerHeight + layout.headerExtraGap);
+        drawFooter();
+        afterItemsY = headerBlockHeight;
+      }
+    
+      // ----------------------------------------------------------
+      // 3️⃣ TOTALS TABLE (YOUR didParseCell PRESERVED)
+      // ----------------------------------------------------------
+      autoTable(doc, {
+        startY: afterItemsY,
+        theme: "grid",
+        body: totalsRows,
+        styles: {
+          font: "times",
+          fontSize: layout.tableFontSize,
+          cellPadding: layout.tableCellPadding,
+          lineColor: [0, 0, 0],
+          lineWidth: 0.2,
+          textColor: [0, 0, 0],
+        },
+        columnStyles: {
+          0: { halign: "center", cellWidth: colWidthsDynamic[0] },
+          1: { halign: "left", cellWidth: colWidthsDynamic[1] },
+          2: { halign: "center", cellWidth: colWidthsDynamic[2] },
+          3: { halign: "right", cellWidth: colWidthsDynamic[3] },
+          4: { halign: "right", cellWidth: colWidthsDynamic[4] },
+          ...(isTaxInvoice && {
+            5: { halign: "center", cellWidth: colWidthsDynamic[5] },
+            6: { halign: "center", cellWidth: colWidthsDynamic[6] },
+          }),
+        },
+        margin: {
+          left: marginX,
+          right: marginX,
+        },
         didParseCell(data) {
-          const isTotalsRow = data.row.index >= itemRows.length;
-
-          if (!isTotalsRow) return;
-
-          // ✅ TAX INVOICE Column Merging Logic
+          // 🔒 EXACT SAME LOGIC YOU PROVIDED
           if (isTaxInvoice) {
             if (data.column.index === TOTAL_LABEL_COL) {
               data.cell.colSpan = 2;
               data.cell.styles.fontStyle = "bold";
               data.cell.styles.halign = "right";
             }
-
             if (data.column.index === TOTAL_VALUE_COL) {
               data.cell.colSpan = 2;
               data.cell.styles.fontStyle = "bold";
               data.cell.styles.halign = "right";
             }
           }
-
-          // ✅ DELIVERY ORDER — Column Merging Logic
+    
           if (!isTaxInvoice) {
             if (data.column.index === 1) {
               data.cell.colSpan = 2;
               data.cell.styles.fontStyle = "bold";
               data.cell.styles.halign = "right";
             }
-            if (data.column.index === 2) {
-              data.cell.styles.fontStyle = "bold";
-              data.cell.styles.halign = "right";
-            }
-            // Label starts at Price (index 3), spans Price + Amount
             if (data.column.index === 3) {
               data.cell.colSpan = 2;
               data.cell.styles.fontStyle = "bold";
               data.cell.styles.halign = "right";
             }
-
-            // Value stays in Amount column (index 4)
             if (data.column.index === 4) {
               data.cell.styles.fontStyle = "bold";
               data.cell.styles.halign = "right";
@@ -387,12 +392,14 @@ export function useInvoice() {
           }
         },
       });
-
-      return (doc as any).lastAutoTable?.finalY || startY;
+    
+      return (doc as any).lastAutoTable.finalY || startY;
     };
+    
 
     // ---------- SIGNATURES ----------
-    const drawSignatures = (afterY: number) => {
+    const drawSignatures = (afterY: number, allowPageBreak: boolean = false) => {
+
       let sigY = Math.max(
         afterY + 20,
         (doc as any).lastAutoTable?.finalY
@@ -401,14 +408,15 @@ export function useInvoice() {
       );
 
       if (
+        allowPageBreak &&
         sigY + sigBoxHeight + sigUnderTextGap >
-        pageHeight - footerHeight - 10
+          pageHeight - footerHeight - 10
       ) {
         doc.addPage();
         drawFooter();
         sigY = 40;
-      }
-
+      }      
+      
       const sigLeftX = marginX;
       const sigRightX = pageWidth - marginX - sigBoxWidth;
 

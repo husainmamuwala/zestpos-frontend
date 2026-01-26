@@ -37,7 +37,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 h-screen bg-white shadow-md flex flex-col">
+    <aside className="w-64 h-screen bg-white shadow-md flex flex-col z-50">
       <div className="p-6">
         {/* Logo / title */}
         <h1 className="text-2xl font-bold text-[#800080] text-center">SCPTrading</h1>

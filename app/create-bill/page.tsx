@@ -19,6 +19,10 @@ export default function CreateBillPage() {
   const {
     invoiceDate,
     setInvoiceDate,
+    handleInvoiceDate,
+    handleSupplyDate,
+    handleManualInvoiceNumber,
+    handleReferenceNumber,
     supplyDate,
     setSupplyDate,
     manualInvoiceNumber,
@@ -45,6 +49,7 @@ export default function CreateBillPage() {
     supplyDateRef,
     invoiceNumberRef,
     referenceNumber,
+    referenceNumberRef,
     setreferenceNumber,
     handleReset,
     itemNameRefs,
@@ -80,7 +85,7 @@ export default function CreateBillPage() {
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Search and select a customer" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <div className="p-2">
                     <Input
                       type="text"
@@ -96,7 +101,7 @@ export default function CreateBillPage() {
                         {cust.name}
                         <span className="">
                           {cust.address ? ` - ${cust.address}` : ""}
-                        </span>
+                        </span>̉
                       </SelectItem>
                     ))}
                     {filteredCustomers.length === 0 && (
@@ -116,7 +121,7 @@ export default function CreateBillPage() {
                 ref={invoiceDateRef}
                 type="date"
                 value={invoiceDate}
-                onChange={(e) => setInvoiceDate(e.target.value)}
+                onChange={(e) => handleInvoiceDate(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     supplyDateRef.current?.focus();
@@ -133,7 +138,7 @@ export default function CreateBillPage() {
                 ref={supplyDateRef}
                 type="date"
                 value={supplyDate}
-                onChange={(e) => setSupplyDate(e.target.value)}
+                onChange={(e) => handleSupplyDate(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     invoiceNumberRef.current?.focus();
@@ -149,7 +154,12 @@ export default function CreateBillPage() {
                 ref={invoiceNumberRef}
                 value={manualInvoiceNumber}
                 placeholder="Eg: INV-001"
-                onChange={(e) => setmanualInvoiceNumber(e.target.value)}
+                onChange={(e) => handleManualInvoiceNumber(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    referenceNumberRef.current?.focus();
+                  }
+                }}
               />
             </div>
             <div>
@@ -157,20 +167,19 @@ export default function CreateBillPage() {
                 Reference Number
               </label>
               <Input
-                ref={invoiceNumberRef}
+                ref={referenceNumberRef}
                 value={referenceNumber}
                 placeholder=""
-                onChange={(e) => setreferenceNumber(e.target.value)}
+                onChange={(e) => handleReferenceNumber(e.target.value)}
               />
             </div>
           </div>
-
           <div className="mt-6 border-t border-gray-200" />
         </div>
 
         {/* Items header */}
         <div className="flex items-center justify-between mb-3 px-8">
-          <h2 className="text-lg font-semibold text-gray-800">Items</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Invoice Items</h2>
           <div className="text-sm text-gray-500">
             Add products and set price / VAT / quantity
           </div>
@@ -301,7 +310,7 @@ export default function CreateBillPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between mt-6 px-8">
+        <div className="flex items-center justify-between mt-6 px-8 mb-10">
           <Button
             onClick={handleAddItem}
             className="bg-[#800080] cursor-pointer text-white hover:bg-[#660066] px-4 py-2 text-sm"
@@ -312,7 +321,7 @@ export default function CreateBillPage() {
         </div>
         <div
           className="sticky bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t px-4 py-4 mt-8 flex items-center justify-between gap-3"
-          style={{ zIndex: 30 }}
+          style={{ zIndex: 20 }}
         >
           <div className="flex items-center gap-3">
             <Button
@@ -325,6 +334,10 @@ export default function CreateBillPage() {
           </div>
 
           <div className="flex items-center gap-6">
+            <div>
+              <label>Total Items:</label>
+              <span>{items.length}</span>
+            </div>
             <div className="text-md font-medium">
               <span className="text-[#666]">Item Total:</span>{" "}
               <span className="text-[#222]">
@@ -360,26 +373,25 @@ export default function CreateBillPage() {
               Final:{" "}
               <span className="text-[#800080]">OMR {total.toFixed(3)}</span>
             </div>
-
-            <div>
-              <Button
-                className={`px-6 py-2 ${
-                  saveDisabled
-                    ? "bg-gray-200 text-gray-400"
-                    : "bg-[#800080] hover:bg-purple-700 text-white cursor-pointer"
-                }`}
-                onClick={handleSaveInvoice}
-                disabled={saveDisabled}
-                aria-disabled={saveDisabled}
-                title={
-                  saveDisabled
-                    ? "Select at least one item to enable Save"
-                    : "Save invoice"
-                }
-              >
-                Download Invoice
-              </Button>
-            </div>
+          </div>
+          <div>
+            <Button
+              className={`px-6 py-2 ${
+                saveDisabled
+                  ? "bg-gray-200 text-gray-400"
+                  : "bg-[#800080] hover:bg-purple-700 text-white cursor-pointer"
+              }`}
+              onClick={handleSaveInvoice}
+              disabled={saveDisabled}
+              aria-disabled={saveDisabled}
+              title={
+                saveDisabled
+                  ? "Select at least one item to enable Save"
+                  : "Save invoice"
+              }
+            >
+              Download Invoice
+            </Button>
           </div>
         </div>
       </div>

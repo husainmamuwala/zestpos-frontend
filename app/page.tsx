@@ -16,7 +16,7 @@ export default function Home() {
       <ClientAuthGuard>
         <div className="flex min-h-screen">
           <Sidebar />
-          <div className="w-full">
+          <div className="flex-1">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold">All Bills</h1>

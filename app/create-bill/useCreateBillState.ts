@@ -8,383 +8,441 @@ import { useInvoice } from "../invoice-table/useInvoice";
 const STORAGE_KEY = "zestpos_create_bill_state";
 
 interface StoredState {
-    customer: string | null;
-    invoiceDate: string;
-    supplyDate: string;
-    items: Item[];
-    selectedCustomer: string;
+  customer: string | null;
+  invoiceDate: string;
+  supplyDate: string;
+  items: Item[];
+  selectedCustomer: string;
+  manualinvoicenumber: string;
+  referenceNumber: string;
 }
 
 const loadStateFromStorage = (): Partial<StoredState> => {
-    if (typeof window === "undefined") return {};
+  if (typeof window === "undefined") return {};
 
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
-    } catch (error) {
-        console.error("Error loading state from localStorage:", error);
-        return {};
-    }
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.error("Error loading state from localStorage:", error);
+    return {};
+  }
 };
 
 export function useCreateBillState() {
-    const savedState = loadStateFromStorage();
-    const { handleDownload } = useInvoice();
-    const [customer, setCustomer] = useState<string | null>(savedState.customer ?? null);
-    const [invoiceDate, setInvoiceDate] = useState(savedState.invoiceDate ?? "");
-    const [supplyDate, setSupplyDate] = useState(savedState.supplyDate ?? "");
+  const savedState = loadStateFromStorage();
+  const { handleDownload } = useInvoice();
+  const [customer, setCustomer] = useState<string | null>(
+    savedState.customer ?? null
+  );
+  const [invoiceDate, setInvoiceDate] = useState(savedState.invoiceDate ?? "");
+  const [supplyDate, setSupplyDate] = useState(savedState.supplyDate ?? "");
 
-    const [productsList, setProductsList] = useState<ProductFromApi[]>([]);
-    const [productsLoading, setProductsLoading] = useState(false);
-    const [productsError, setProductsError] = useState<string | null>(null);
+  const [productsList, setProductsList] = useState<ProductFromApi[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsError, setProductsError] = useState<string | null>(null);
 
-    const [customers, setCustomers] = useState<Customer[]>([]);
-    const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedCustomer, setSelectedCustomer] = useState<string>(savedState.selectedCustomer ?? "");
-    const [manualInvoiceNumber, setmanualInvoiceNumber] = useState<string>("");
-    const [referenceNumber, setreferenceNumber] = useState<string>("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState<string>(
+    savedState.selectedCustomer ?? ""
+  );
+  const [manualInvoiceNumber, setmanualInvoiceNumber] = useState(savedState.manualinvoicenumber ?? "");
+  const [referenceNumber, setreferenceNumber] = useState(savedState.referenceNumber ?? "");
 
-    const invoiceDateRef = useRef<HTMLInputElement | null>(null);
-    const supplyDateRef = useRef<HTMLInputElement | null>(null);
-    const invoiceNumberRef = useRef<HTMLInputElement | null>(null);
+  const invoiceDateRef = useRef<HTMLInputElement | null>(null);
+  const supplyDateRef = useRef<HTMLInputElement | null>(null);
+  const invoiceNumberRef = useRef<HTMLInputElement | null>(null);
+  const referenceNumberRef = useRef<HTMLInputElement | null>(null);
 
-    const [items, setItems] = useState<Item[]>(
-        savedState.items ?? [
-            {
-                id: Date.now(),
-                name: "",
-                price: 0,
-                qty: 0,
-                vat: 0,
-            },
-        ]
+  const [items, setItems] = useState<Item[]>(
+    savedState.items ?? [
+      {
+        id: Date.now(),
+        name: "",
+        price: 0,
+        qty: 0,
+        vat: 0,
+      },
+    ]
+  );
+  // Dynamic refs for each column of the items table
+  const itemNameRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const itemPriceRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const itemQtyRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const itemVatRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const cleanupItems = (items: Item[]) => {
+    return items.filter(
+      (it) => String(it.name || "").trim() !== "" || it.qty > 0 || it.price > 0
     );
-    // Dynamic refs for each column of the items table
-    const itemNameRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const itemPriceRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const itemQtyRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const itemVatRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  };
 
-    const [saving, setSaving] = useState(false);
-    const [saveError, setSaveError] = useState<string | null>(null);
-    const cleanupItems = (items: Item[]) => {
-        return items.filter(
-            (it) => String(it.name || "").trim() !== "" || it.qty > 0 || it.price > 0
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setProductsLoading(true);
+      setProductsError(null);
+      try {
+        const res = await authApi.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/product/products`
         );
+        setProductsList(res.data.products);
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        setProductsError(errMsg);
+        setProductsList([]);
+      } finally {
+        setProductsLoading(false);
+      }
     };
+    fetchProducts();
+  }, []);
 
+  useEffect(() => {
+    if (!productsList || productsList.length === 0) return;
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            setProductsLoading(true);
-            setProductsError(null);
-            try {
-                const res = await authApi.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/product/products`);
-                setProductsList(res.data.products);
-            } catch (err: unknown) {
-                const errMsg = err instanceof Error ? err.message : String(err);
-                setProductsError(errMsg);
-                setProductsList([]);
-            } finally {
-                setProductsLoading(false);
-            }
-        };
-        fetchProducts();
-    }, []);
-
-    useEffect(() => {
-        if (!productsList || productsList.length === 0) return;
-
-        // Only reset items whose product name no longer exists in the fetched products.
-        setItems((prevItems) => {
-            let changed = false;
-            const cleaned = prevItems.map((item) => {
-                const nameStr = String(item.name || "").trim();
-                if (nameStr === "") return item;
-                // case-insensitive existence check
-                const exists = productsList.some((p) => p.name.toLowerCase() === nameStr.toLowerCase());
-                if (!exists) {
-                    changed = true;
-                    return {
-                        ...item,
-                        name: "",
-                        price: 0,
-                        vat: 0,
-                    };
-                }
-                return item;
-            });
-
-            if (changed) {
-                // persist cleaned items to localStorage
-                saveStateToStorage({ items: cleaned });
-                return cleaned;
-            }
-            return prevItems;
-        });
-    }, [productsList]);
-
-    useEffect(() => {
-        const fetchCustomers = async () => {
-            try {
-                const res = await authApi.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/customer/customers`);
-                setCustomers(res.data.customers);
-                setFilteredCustomers(res.data.customers);
-            } catch (err: unknown) {
-                // Optionally handle error
-            }
-        };
-        fetchCustomers();
-    }, []);
-
-    const handleSearch = (query: string) => {
-        setSearchQuery(query);
-        const filtered = customers.filter((cust) =>
-            cust.name.toLowerCase().includes(query.toLowerCase())
+    // Only reset items whose product name no longer exists in the fetched products.
+    setItems((prevItems) => {
+      let changed = false;
+      const cleaned = prevItems.map((item) => {
+        const nameStr = String(item.name || "").trim();
+        if (nameStr === "") return item;
+        // case-insensitive existence check
+        const exists = productsList.some(
+          (p) => p.name.toLowerCase() === nameStr.toLowerCase()
         );
-        setFilteredCustomers(filtered);
-    };
-
-    const handleReset = () => {
-        setCustomer(null);
-        setInvoiceDate("");
-        setSupplyDate("");
-        setSelectedCustomer("");
-        setItems([
-            {
-                id: Date.now() + Math.floor(Math.random() * 1000),
-                name: "",
-                price: 0,
-                qty: 0,
-                vat: 0,
-            }
-        ]);
-        localStorage.removeItem(STORAGE_KEY);
-        saveStateToStorage({ items: [] });
-        
-    };
-
-    const saveStateToStorage = (newState: Partial<StoredState>) => {
-        if (typeof window === "undefined") return;
-
-        try {
-            const currentState = loadStateFromStorage();
-            let updatedState = { ...currentState, ...newState };
-
-            // ✨ auto-clean items here
-            if (updatedState.items) {
-                updatedState.items = cleanupItems(updatedState.items);
-            }
-
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
-        } catch (error) {
-            console.error("Error saving state to localStorage:", error);
+        if (!exists) {
+          changed = true;
+          return {
+            ...item,
+            name: "",
+            price: 0,
+            vat: 0,
+          };
         }
+        return item;
+      });
+
+      if (changed) {
+        // persist cleaned items to localStorage
+        saveStateToStorage({ items: cleaned });
+        return cleaned;
+      }
+      return prevItems;
+    });
+  }, [productsList]);
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const res = await authApi.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/customer/customers`
+        );
+        setCustomers(res.data.customers);
+        setFilteredCustomers(res.data.customers);
+      } catch (err: unknown) {
+        // Optionally handle error
+      }
     };
+    fetchCustomers();
+  }, []);
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    const filtered = customers.filter((cust) =>
+      cust.name.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
+  };
 
-    const handleCustomerSelect = (custId: string) => {
-        const found = customers.find((c) => c._id === custId);
-        const newCustomerName = found ? found.name : null;
+  const handleReset = () => {
+    setCustomer(null);
+    setInvoiceDate("");
+    setSupplyDate("");
+    setSelectedCustomer("");
+    setmanualInvoiceNumber("");
+    setreferenceNumber("");
+    setItems([
+      {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        name: "",
+        price: 0,
+        qty: 0,
+        vat: 0,
+      },
+    ]);
+    localStorage.removeItem(STORAGE_KEY);
+    saveStateToStorage({ items: [] });
+  };
 
-        setSelectedCustomer(custId);
-        setCustomer(newCustomerName);
-        saveStateToStorage({
-            selectedCustomer: custId,
-            customer: newCustomerName,
-        });
-        setTimeout(() => {
-            invoiceDateRef.current?.focus();
-        }, 50);
-    };
+  const saveStateToStorage = (newState: Partial<StoredState>) => {
+    if (typeof window === "undefined") return;
 
-    const handleAddItem = () => {
-        setItems((prev) => {
-            const newItem = {
-                id: Date.now() + Math.floor(Math.random() * 1000),
-                name: "",
-                price: 0,
-                qty: 0,
-                vat: 0,
-            };
+    try {
+      const currentState = loadStateFromStorage();
+      let updatedState = { ...currentState, ...newState };
 
-            const cleanedPrev = cleanupItems(prev);
-            const newItems = [...cleanedPrev, newItem];
+      // ✨ auto-clean items here
+      if (updatedState.items) {
+        updatedState.items = cleanupItems(updatedState.items);
+      }
 
-            saveStateToStorage({ items: cleanedPrev }); // ✨ save only valid items
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
+    } catch (error) {
+      console.error("Error saving state to localStorage:", error);
+    }
+  };
 
-            return newItems;
-        });
-    };
+  const handleCustomerSelect = (custId: string) => {
+    const found = customers.find((c) => c._id === custId);
+    const newCustomerName = found ? found.name : null;
 
+    setSelectedCustomer(custId);
+    setCustomer(newCustomerName);
+    saveStateToStorage({
+      selectedCustomer: custId,
+      customer: newCustomerName,
+    });
+    setTimeout(() => {
+      invoiceDateRef.current?.focus();
+    }, 50);
+  };
 
-    const handleItemChange = (id: number, name: string) => {
-        const foundApi = productsList.find((i) => i.name.toLowerCase() === name.toLowerCase());
-        setItems((prev) => {
-            const newItems = prev.map((item) =>
-                item.id === id
-                    ? {
-                        ...item,
-                        name,
-                        price: foundApi?.price ?? 0,
-                        vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
-                    }
-                    : item
-            );
-            saveStateToStorage({ items: newItems });
-            return newItems;
-        });
-        setTimeout(() => {
-            itemPriceRefs.current[id]?.focus();
-        }, 50);
-    };
+  const handleInvoiceDate = (date: string) => {
+    setInvoiceDate(date);
+    saveStateToStorage({
+      invoiceDate: date,
+    });
 
-    const handleChange = (id: number, field: string, value: unknown) => {
-        setItems((prev) => {
-            const newItems = prev.map((item) =>
-                item.id === id
-                    ? {
-                        ...item,
-                        [field]:
-                            field === "price" || field === "vat"
-                                ? (() => {
-                                    const n = Number(value);
-                                    return Number.isFinite(n) ? n : 0;
-                                })()
-                                : field === "qty"
-                                    ? (() => {
-                                        const n = parseInt(String(value), 10);
-                                        return Number.isFinite(n) ? n : 0;
-                                    })()
-                                    : value,
-                    }
-                    : item
-            );
-            saveStateToStorage({ items: newItems });
-            return newItems;
-        });
+    setTimeout(() => {
+      supplyDateRef.current?.focus();
+    }, 50);
+  };
 
-    };
+  const handleSupplyDate = (date: string) => {
+    setSupplyDate(date);
+    saveStateToStorage({
+      supplyDate: date,
+    });
 
-    const handleRemove = (id: number) => {
-        setItems((prev) => {
-            if (prev.length <= 1) return prev;
-            const newItems = prev.filter((i) => i.id !== id);
-            saveStateToStorage({ items: newItems });
-            return newItems;
-        });
-    };
+    setTimeout(() => {
+      invoiceNumberRef.current?.focus();
+    }, 50);
+  };
 
-    const itemFinal = (item: { qty: number; price: number; vat: number }): number => {
-        const qty = Number(item.qty) || 0;
-        const price = Number(item.price) || 0;
-        const vat = Number(item.vat) || 0;
-        return qty * price * (1 + vat / 100);
-    };
+  const handleManualInvoiceNumber = (invno: string) => {
+    setmanualInvoiceNumber(invno);
+    saveStateToStorage({
+        manualinvoicenumber: invno,
+    });
+  }
 
-    const total = items.reduce((sum, i) => sum + itemFinal(i), 0);
-    const disableDelete = items.length === 1;
-    const hasSelectedItem = items.some((i) => String(i.name || "").trim() !== "");
-    const saveDisabled = !hasSelectedItem || !selectedCustomer || !invoiceDate || !supplyDate;
+  const handleReferenceNumber = (refno: string) => {
+    setreferenceNumber(refno);
+    saveStateToStorage({
+        referenceNumber: refno,
+    });
+  }
 
-    const handleSaveInvoice = async () => {
-        if (saveDisabled) return;
-        setSaving(true);
-        setSaveError(null);
+  const handleAddItem = () => {
+    setItems((prev) => {
+      const newItem = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        name: "",
+        price: 0,
+        qty: 0,
+        vat: 0,
+      };
 
-        try {
-            const today = new Date().toISOString().slice(0, 10);
-            const payload = {
-                customerId: selectedCustomer,
-                invoiceDate: invoiceDate || today,
-                manualInvoiceNumber: manualInvoiceNumber,
-                referenceNumber: referenceNumber,
-                supplyDate: supplyDate || today,
-                items: items.map((it) => ({
-                    itemName: it.name,
-                    price: Number(it.price) || 0,
-                    qty: Number(it.qty) || 0,
-                    vat: Number(it.vat) || 0,
-                })),
-            };
+      const cleanedPrev = cleanupItems(prev);
+      const newItems = [...cleanedPrev, newItem];
 
-            // Use authApi which has baseURL set and attaches token if present
-            const res = await authApi.post(`/invoice/create`, payload);
-            if (res.data.invoice) {
-                handleDownload(res.data.invoice, "TAX INVOICE");
-                handleDownload(res.data.invoice, "DELIVERY ORDER");
-                toast.success("Invoice PDF downloaded successfully");
+      saveStateToStorage({ items: cleanedPrev }); // ✨ save only valid items
+
+      return newItems;
+    });
+  };
+
+  const handleItemChange = (id: number, name: string) => {
+    const foundApi = productsList.find(
+      (i) => i.name.toLowerCase() === name.toLowerCase()
+    );
+    setItems((prev) => {
+      const newItems = prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              name,
+              price: foundApi?.price ?? 0,
+              vat: typeof foundApi?.vat === "number" ? foundApi.vat : item.vat,
             }
+          : item
+      );
+      saveStateToStorage({ items: newItems });
+      return newItems;
+    });
+    setTimeout(() => {
+      itemPriceRefs.current[id]?.focus();
+    }, 50);
+  };
 
-            // notify success
-            try {
-                const successMsg = res?.data?.message || "Invoice created successfully";
-                toast.success(successMsg);
-            } catch (e) {
-                // ignore
+  const handleChange = (id: number, field: string, value: unknown) => {
+    setItems((prev) => {
+      const newItems = prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              [field]:
+                field === "price" || field === "vat"
+                  ? (() => {
+                      const n = Number(value);
+                      return Number.isFinite(n) ? n : 0;
+                    })()
+                  : field === "qty"
+                  ? (() => {
+                      const n = parseInt(String(value), 10);
+                      return Number.isFinite(n) ? n : 0;
+                    })()
+                  : value,
             }
+          : item
+      );
+      saveStateToStorage({ items: newItems });
+      return newItems;
+    });
+  };
 
-            return res.data;
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
-            setSaveError(msg);
-            console.error("Error saving invoice:", err);
-            toast.error(msg || "Error saving invoice");
-            throw err;
-        } finally {
-            setSaving(false);
-        }
-    };
+  const handleRemove = (id: number) => {
+    setItems((prev) => {
+      if (prev.length <= 1) return prev;
+      const newItems = prev.filter((i) => i.id !== id);
+      saveStateToStorage({ items: newItems });
+      return newItems;
+    });
+  };
 
-    // Extra guard: persist items whenever items array changes.
-    useEffect(() => {
-        saveStateToStorage({ items });
-    }, [items]);
+  const itemFinal = (item: {
+    qty: number;
+    price: number;
+    vat: number;
+  }): number => {
+    const qty = Number(item.qty) || 0;
+    const price = Number(item.price) || 0;
+    const vat = Number(item.vat) || 0;
+    return qty * price * (1 + vat / 100);
+  };
 
-    return {
-        customer,
-        setCustomer,
-        invoiceDate,
-        setInvoiceDate,
-        supplyDate,
-        setSupplyDate,
-        manualInvoiceNumber,
-        setmanualInvoiceNumber,
-        productsList,
-        productsLoading,
-        productsError,
-        customers,
-        filteredCustomers,
-        searchQuery,
-        setSearchQuery,
-        selectedCustomer,
-        setSelectedCustomer,
-        items,
-        setItems,
-        handleSearch,
-        handleReset,
-        handleCustomerSelect,
-        handleAddItem,
-        handleItemChange,
-        handleChange,
-        handleRemove,
-        itemFinal,
-        total,
-        disableDelete,
-        hasSelectedItem,
-        saveDisabled,
-        handleSaveInvoice,
-        saving,
-        saveError,
-        invoiceDateRef,
-        supplyDateRef,
-        invoiceNumberRef,
-        itemNameRefs,
-        itemPriceRefs,
-        itemQtyRefs,
-        itemVatRefs,
-        referenceNumber,
-        setreferenceNumber,
-    };
+  const total = items.reduce((sum, i) => sum + itemFinal(i), 0);
+  const disableDelete = items.length === 1;
+  const hasSelectedItem = items.some((i) => String(i.name || "").trim() !== "");
+  const saveDisabled =
+    !hasSelectedItem || !selectedCustomer || !invoiceDate || !supplyDate;
+
+  const handleSaveInvoice = async () => {
+    if (saveDisabled) return;
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const payload = {
+        customerId: selectedCustomer,
+        invoiceDate: invoiceDate || today,
+        manualInvoiceNumber: manualInvoiceNumber,
+        referenceNumber: referenceNumber,
+        supplyDate: supplyDate || today,
+        items: items.map((it) => ({
+          itemName: it.name,
+          price: Number(it.price) || 0,
+          qty: Number(it.qty) || 0,
+          vat: Number(it.vat) || 0,
+        })),
+      };
+
+      // Use authApi which has baseURL set and attaches token if present
+      const res = await authApi.post(`/invoice/create`, payload);
+      if (res.data.invoice) {
+        handleDownload(res.data.invoice, "TAX INVOICE");
+        handleDownload(res.data.invoice, "DELIVERY ORDER");
+        toast.success("Invoice PDF downloaded successfully");
+      }
+
+      // notify success
+      try {
+        const successMsg = res?.data?.message || "Invoice created successfully";
+        toast.success(successMsg);
+      } catch (e) {
+        // ignore
+      }
+
+      return res.data;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSaveError(msg);
+      console.error("Error saving invoice:", err);
+      toast.error(msg || "Error saving invoice");
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Extra guard: persist items whenever items array changes.
+  useEffect(() => {
+    saveStateToStorage({ items });
+  }, [items]);
+
+  return {
+    customer,
+    setCustomer,
+    invoiceDate,
+    setInvoiceDate,
+    supplyDate,
+    setSupplyDate,
+    manualInvoiceNumber,
+    setmanualInvoiceNumber,
+    productsList,
+    productsLoading,
+    productsError,
+    customers,
+    filteredCustomers,
+    searchQuery,
+    setSearchQuery,
+    selectedCustomer,
+    setSelectedCustomer,
+    items,
+    setItems,
+    handleSearch,
+    handleReset,
+    handleCustomerSelect,
+    handleAddItem,
+    handleInvoiceDate,
+    handleSupplyDate,
+    handleManualInvoiceNumber,
+    handleReferenceNumber,
+    handleItemChange,
+    handleChange,
+    handleRemove,
+    itemFinal,
+    total,
+    disableDelete,
+    hasSelectedItem,
+    saveDisabled,
+    handleSaveInvoice,
+    saving,
+    saveError,
+    invoiceDateRef,
+    supplyDateRef,
+    invoiceNumberRef,
+    itemNameRefs,
+    itemPriceRefs,
+    itemQtyRefs,
+    itemVatRefs,
+    referenceNumber,
+    referenceNumberRef,
+    setreferenceNumber,
+  };
 }
